@@ -1,11 +1,11 @@
-/* xsh_date.c - xsh_date */
+/* xsh_hello.c  - xsh_hello */
 
 #include <xinu.h>
 #include <string.h>
 #include <stdio.h>
 
 /*------------------------------------------------------------------------
- * xsh_date - obtain and print the current month, day, year, and time
+ * xsh_hello - displays welcome message
  *------------------------------------------------------------------------
  */
 shellcmd xsh_hello(int nargs, char *args[]) {
