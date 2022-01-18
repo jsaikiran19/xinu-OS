@@ -30,6 +30,7 @@ shellcmd xsh_hello(int nargs, char *args[]) {
 
 	if (nargs == 2) {
 		printf("Hello %s, Welcome to the world of Xinu!!",args[1]);
+        printf("\n");
 	}
 	return 0;
 }
