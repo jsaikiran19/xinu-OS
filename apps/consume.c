@@ -7,7 +7,9 @@ void consumer(int count) {
   //   - reading the value of the global variable 'n' each time
   //   - print consumed value (the value of 'n'), e.g. "consumed : 8"
   int i;
-  for(i=n;i>=0;i--){
-    printf("consumed: %d",i);
+  for(i=0;i<=count;i++){
+    printf("consumed: %d",n);
+    printf("\n");
   }
+  return 0;
 }
