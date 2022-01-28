@@ -2,15 +2,22 @@
 #include <prodcons.h>
 #include <stdlib.h>
 #include <string.h>
-int n;  
-shellcmd xsh_prodcons(int nargs, char *args[]) {
+int n;
+sid32 can_read;
+sid32 can_write;
+shellcmd xsh_prodcons(int nargs, char *args[])
+{
     // Argument verifications and validations
-    int count = 2000;    // local varible to hold count
-    if(nargs==2) {
+    int count = 200; // local varible to hold count
+    if (nargs == 2)
+    {
         count = atoi(args[1]);
+        can_write = semcreate(1);
+        can_read = semcreate(0);
     }
-    else if(nargs>2) {
-        fprintf(stderr,"%s: too many arguments",args[0]);
+    else if (nargs > 2)
+    {
+        fprintf(stderr, "%s: too many arguments", args[0]);
         printf("\n");
         return 0;
     }
