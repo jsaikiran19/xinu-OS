@@ -9,8 +9,8 @@ shellcmd xsh_run(int nargs, char *args[])
 
     struct cmdent supportedFunctions[] = {
         {"hello", FALSE, xsh_hello},
-        {"prodcons",FALSE, xsh_prodcons},
-        {"list", FALSE, NULL}
+        {"list", FALSE, NULL},
+        {"prodcons",FALSE, xsh_prodcons}
     };
     int i;
     int n = (int)sizeof(supportedFunctions) / (int)sizeof(supportedFunctions[0]);
