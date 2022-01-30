@@ -13,7 +13,7 @@ void producer(int count)
     if (wait(can_write))
     {
       n = i;
-      printf("produced: %d", n);
+      printf("produced : %d", n);
       printf("\n");
       signal(can_read);
     }

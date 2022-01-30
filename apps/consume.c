@@ -12,7 +12,7 @@ void consumer(int count)
   {
     if (wait(can_read))
     {
-      printf("consumed: %d", n);
+      printf("consumed : %d", n);
       printf("\n");
       signal(can_write);
     }
