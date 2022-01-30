@@ -9,11 +9,11 @@ shellcmd xsh_prodcons(int nargs, char *args[])
 {
     // Argument verifications and validations
     int count = 200; // local varible to hold count
+    can_write = semcreate(1);
+    can_read = semcreate(0);
     if (nargs == 2)
     {
         count = atoi(args[1]);
-        can_write = semcreate(1);
-        can_read = semcreate(0);
     }
     else if (nargs > 2)
     {
