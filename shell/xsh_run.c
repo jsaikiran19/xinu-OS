@@ -1,7 +1,7 @@
 #include <xinu.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <prodcons.h>
 #include <shprototypes.h>
 
 struct cmdent supportedFunctions[] = {
@@ -35,14 +35,14 @@ shellcmd xsh_run(int nargs, char *args[])
         }
         else
         {
-            resume(create((void *)xsh_hello, 4096, 20, "hello", 2, nargs, args));
+            resume(create(xsh_hello, 4096, 20, "hello", 2, nargs, args));
         }
     }
     else if (strncmp(args[0], "prodcons", 8) == 0)
     {
         if (nargs <= 2)
         {
-            resume(create((void *)xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
+            resume(create(xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
         }
         else
         {
