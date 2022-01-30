@@ -27,7 +27,7 @@ shellcmd xsh_run(int nargs, char *args[])
     args++;
     nargs--;
 
-    if (strncmp(args[0], "hello", 13) == 0)
+    if (strncmp(args[0], "hello", 5) == 0)
     {
         if (nargs != 2)
         {
@@ -38,15 +38,15 @@ shellcmd xsh_run(int nargs, char *args[])
             resume(create((void *)xsh_hello, 4096, 20, "hello", 2, nargs, args));
         }
     }
-    else if (strncmp(args[0], "prodcons", 13) == 0)
+    else if (strncmp(args[0], "prodcons", 8) == 0)
     {
-        if (nargs > 2)
+        if (nargs <= 2)
         {
-            printf("Syntax: run prodcons [counter]\n");
+            resume(create((void *)xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
         }
         else
         {
-            resume(create((void *)xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
+            printf("Syntax: run prodcons [counter]\n");
         }
     }
     else
