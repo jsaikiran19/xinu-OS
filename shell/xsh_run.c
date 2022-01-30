@@ -11,21 +11,16 @@ struct cmdent supportedFunctions[] = {
 
 int count = (int)sizeof(supportedFunctions) / (int)sizeof(supportedFunctions[0]);
 
-void printSupportedFunctions(struct cmdent commands[], int count)
-{
-    for (int i = 0; i < count; i++)
-    {
-        printf("%s\n", commands[i].cname);
-    }
-}
-
 shellcmd xsh_run(int nargs, char *args[])
 {
 
-    // int i;
+    
     if ((nargs == 1) || (strncmp(args[1], "list", 4) == 0))
     {
-        printSupportedFunctions(supportedFunctions, count);
+        for (int i = 0; i < count; i++)
+        {
+            printf("%s\n", supportedFunctions[i].cname);
+        }
         return OK;
     }
 
@@ -56,7 +51,10 @@ shellcmd xsh_run(int nargs, char *args[])
     }
     else
     {
-        printSupportedFunctions(supportedFunctions, count);
+        for (int i = 0; i < count; i++)
+        {
+            printf("%s\n", supportedFunctions[i].cname);
+        }
         return OK;
     }
 
