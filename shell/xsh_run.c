@@ -9,7 +9,7 @@ struct cmdent supportedFunctions[] = {
     {"list", FALSE, NULL},
     {"prodcons", FALSE, xsh_prodcons}};
 
-int count = (int)sizeof(supportedFunctions) / (int)sizeof(supportedFunctions[0]);
+int size = (int)sizeof(supportedFunctions) / (int)sizeof(supportedFunctions[0]);
 
 shellcmd xsh_run(int nargs, char *args[])
 {
@@ -17,7 +17,7 @@ shellcmd xsh_run(int nargs, char *args[])
     
     if ((nargs == 1) || (strncmp(args[1], "list", 4) == 0))
     {
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < size; i++)
         {
             printf("%s\n", supportedFunctions[i].cname);
         }
@@ -51,7 +51,7 @@ shellcmd xsh_run(int nargs, char *args[])
     }
     else
     {
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < size; i++)
         {
             printf("%s\n", supportedFunctions[i].cname);
         }
