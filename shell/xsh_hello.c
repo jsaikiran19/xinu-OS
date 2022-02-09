@@ -3,7 +3,7 @@
 #include <xinu.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <run.h>
 /*------------------------------------------------------------------------
  * xsh_hello - displays welcome message
  *------------------------------------------------------------------------
@@ -42,5 +42,6 @@ shellcmd xsh_hello(int nargs, char *args[]) {
 		printf("Hello %s, Welcome to the world of Xinu!!",args[1]);
         printf("\n");
 	}
+	signal(can_exit);
 	return 0;
 }

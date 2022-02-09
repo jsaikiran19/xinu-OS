@@ -1,0 +1,1 @@
+extern sid32 can_exit;
