@@ -10,13 +10,13 @@ sid32 can_consume;
 sid32 can_exit_prodcons_bb;
 int arr_q[5];
 int write_index, read_index, total_count;
-struct cmdent supportedFunctions[] = {
-    {"hello", FALSE, xsh_hello},
-    {"list", FALSE, NULL},
-    {"prodcons", FALSE, xsh_prodcons}};
+void prodcons_bb(int nargs, char *args[]);
+
+char* supportedFunctions[] = {
+    "hello","list","prodcons","prodcons_bb"
+};
 
 int size = (int)sizeof(supportedFunctions) / (int)sizeof(supportedFunctions[0]);
-void prodcons_bb(int nargs, char *args[]);
 shellcmd xsh_run(int nargs, char *args[])
 {
 
@@ -29,7 +29,7 @@ shellcmd xsh_run(int nargs, char *args[])
     {
         for (int i = 0; i < size; i++)
         {
-            printf("%s\n", supportedFunctions[i].cname);
+            printf("%s\n", supportedFunctions[i]);
         }
         return OK;
     }
@@ -72,7 +72,7 @@ shellcmd xsh_run(int nargs, char *args[])
     {
         for (int i = 0; i < size; i++)
         {
-            printf("%s\n", supportedFunctions[i].cname);
+            printf("%s\n", supportedFunctions[i]);
         }
         return OK;
     }
