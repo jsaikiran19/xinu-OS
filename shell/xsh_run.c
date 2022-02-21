@@ -5,6 +5,7 @@
 #include <shprototypes.h>
 #include <prodcons_bb.h>
 #include <future_prodcons.h>
+#include <ctype.h>
 #include <future.h>
 sid32 can_exit;
 sid32 can_produce;
@@ -15,7 +16,6 @@ struct command
 {
     char *name;
     void (*cfunc)(int32, char *[]);
-    
 };
 int write_index, read_index, total_count;
 void list(int nargs, char *args[]);
@@ -57,15 +57,18 @@ shellcmd xsh_run(int nargs, char *args[])
     args++;
     nargs--;
     bool8 cmd_found = FALSE;
-    for(int i=0;i<size;i++) {
-        int cmd_length = strlen(run_commands[i].name)+4;
-        if (strncmp(args[0],run_commands[i].name,cmd_length)==0) {
-            run_commands[i].cfunc(nargs,args);
+    for (int i = 0; i < size; i++)
+    {
+        int cmd_length = strlen(run_commands[i].name) + 4;
+        if (strncmp(args[0], run_commands[i].name, cmd_length) == 0)
+        {
+            run_commands[i].cfunc(nargs, args);
             cmd_found = TRUE;
         }
     }
-    if(!cmd_found) {
-        list(nargs,args);
+    if (!cmd_found)
+    {
+        list(nargs, args);
     }
 
     return (0);
@@ -77,7 +80,6 @@ void list(int nargs, char *args[])
     {
         printf("%s\n", run_commands[i].name);
     }
-    
 }
 
 void hello(int nargs, char *args[])
@@ -110,7 +112,7 @@ void prodcons_bb(int nargs, char *args[])
 {
     args++;
     nargs--;
-    
+
     if (nargs != 4)
     {
         printf("Syntax: run prodcons_bb [# of producer processes] [# of consumer processes] [# of iterations the producer runs] [# of iterations the consumer runs]");
@@ -141,83 +143,91 @@ void prodcons_bb(int nargs, char *args[])
             resume(create(consumer_bb, 4096, 20, "consumer_bb", 2, j, cons_iterations));
         }
         wait(can_exit_prodcons_bb);
-        
     }
     signal(can_exit);
     return;
 }
 
-int check_number(char* s){
-    int l=strlen(s);
-    int i=0;
-    for(i=0;i<l;i++){
-        if(check_number(s[i])<=0){
+int check_number(char *s)
+{
+    int l = strlen(s);
+    int i = 0;
+    for (i = 0; i < l; i++)
+    {
+        if (isdigit(s[i]) <= 0)
+        {
             return -1;
         }
     }
     return 1;
-    
 }
 
+void future_prodcons(int nargs, char *args[])
+{
 
-void future_prodcons(int nargs, char *args[]) {
+    if (nargs <= 3)
+    {
+        printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
+        return;
+    }
 
-  print_sem = semcreate(1);
-  future_t* future_exclusive;
-  future_exclusive = future_alloc(FUTURE_EXCLUSIVE, sizeof(int), 1);
-  char *val;
+    print_sem = semcreate(1);
+    future_t *future_exclusive;
+    future_exclusive = future_alloc(FUTURE_EXCLUSIVE, sizeof(int), 1);
+    char *val;
 
- 
-  int i = 2;
-  while (i < nargs) {
-  
-      if ((strcmp(args[i], "g") != 0) && (strcmp(args[i], "s") != 0) && (check_number(args[i])==-1)){
-              printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
-              return;
-          }
-        else if ( (strcmp(args[i], "g") == 0) && (check_number(args[i+1])==1)){
-            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
-            return;
-        }
-        else if ( (strcmp(args[i], "s") == 0) && (check_number(args[i+1])==-1) )
+    int i = 2;
+    while (i < nargs)
+    {
+
+        if ((strcmp(args[i], "g") != 0) && (strcmp(args[i], "s") != 0) && (check_number(args[i]) == -1))
         {
-             printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
+            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
             return;
         }
-        else if ( (check_number(args[i])==1) && (strcmp(args[i-1], "s") != 0) ){
+        else if ((strcmp(args[i], "g") == 0) && (check_number(args[i + 1]) == 1))
+        {
+            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
+            return;
+        }
+        else if ((strcmp(args[i], "s") == 0) && (check_number(args[i + 1]) == -1))
+        {
+            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
+            return;
+        }
+        else if ((check_number(args[i]) == 1) && (strcmp(args[i - 1], "s") != 0))
+        {
 
             printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
             return;
-
         }
-        
-        
-        
-   
-    
-    i++;
-  }
 
-  int num_args = i;  // keeping number of args to create the array
-  i = 2; // reseting the index
-  val  =  (char *) getmem(num_args); 
+        i++;
+    }
 
-  // Iterate again through the arguments and create the following processes based on the passed argument ("g" or "s VALUE")
-  while (i < nargs) {
-    if (strcmp(args[i], "g") == 0) {
-      char id[10];
-      sprintf(id, "fcons%d",i);
-      resume(create(future_cons, 2048, 20, id, 1, future_exclusive));
+    int num_args = i; // keeping number of args to create the array
+    i = 2;            // reseting the index
+    val = (char *)getmem(num_args);
+
+    // Iterate again through the arguments and create the following processes based on the passed argument ("g" or "s VALUE")
+    while (i < nargs)
+    {
+        if (strcmp(args[i], "g") == 0)
+        {
+            char id[10];
+            sprintf(id, "fcons%d", i);
+            resume(create(future_cons, 2048, 20, id, 1, future_exclusive));
+        }
+        if (strcmp(args[i], "s") == 0)
+        {
+            i++;
+            uint8 num = atoi(args[i]);
+            val[i] = num;
+            resume(create(future_prod, 2048, 20, "fprod", 2, future_exclusive, &val[i]));
+            sleepms(5);
+        }
+        i++;
     }
-    if (strcmp(args[i], "s") == 0) {
-      i++;
-      uint8 num = atoi(args[i]);
-      val[i] = num;
-      resume(create(future_prod, 2048, 20, "fprod", 2, future_exclusive, &val[i]));
-      sleepms(5);
-    }
-    i++;
-  }
-  sleepms(100);
-  future_free(future_exclusive);
+    sleepms(100);
+    future_free(future_exclusive);
 }
