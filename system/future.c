@@ -23,7 +23,7 @@ syscall future_free(future_t *future)
     intmask mask;
     mask = disable();
     restore(mask);
-    return freemem((char*)f, sizeof(future_t)+future->size);
+    return freemem((char*)future, sizeof(future_t)+future->size);
 }
 
 syscall future_set(future_t *future,char *data)
