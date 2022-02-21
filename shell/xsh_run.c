@@ -4,19 +4,42 @@
 #include <run.h>
 #include <shprototypes.h>
 #include <prodcons_bb.h>
+#include <future_prodcons.h>
+#include <future.h>
 sid32 can_exit;
 sid32 can_produce;
 sid32 can_consume;
 sid32 can_exit_prodcons_bb;
 int arr_q[5];
-int write_index, read_index, total_count;
-void prodcons_bb(int nargs, char *args[]);
-
-char* supportedFunctions[] = {
-    "hello","list","prodcons","prodcons_bb","futest"
+struct command
+{
+    char *name;
+    void (*cfunc)(int32, char *[]);
+    
 };
+int write_index, read_index, total_count;
+void list(int nargs, char *args[]);
+void hello(int nargs, char *args[]);
+void prodcons(int nargs, char *args[]);
+void prodcons_bb(int nargs, char *args[]);
+void future_prodcons(int nargs, char *args[]);
 
-int size = (int)sizeof(supportedFunctions) / (int)sizeof(supportedFunctions[0]);
+char *supportedFunctions[] = {
+    "hello", "list", "prodcons", "prodcons_bb"};
+
+const struct command run_commands[] = {
+    {"futest",
+     future_prodcons},
+    {"hello",
+     hello},
+    {"list",
+     list},
+    {"prodcons",
+     prodcons},
+    {"prodcons_bb",
+     prodcons_bb}};
+
+int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
 shellcmd xsh_run(int nargs, char *args[])
 {
 
@@ -25,63 +48,69 @@ shellcmd xsh_run(int nargs, char *args[])
     can_consume = semcreate(0);
     can_exit_prodcons_bb = semcreate(0);
     write_index = 0;
-    if ((nargs == 1) || (strncmp(args[1], "list", 4) == 0))
+    if ((nargs == 1))
     {
-        for (int i = 0; i < size; i++)
-        {
-            printf("%s\n", supportedFunctions[i]);
-        }
-        return OK;
+        list(nargs, args);
+        return 0;
     }
 
     args++;
     nargs--;
-
-    if (strncmp(args[0], "hello", 5) == 0)
-    {
-        if (nargs != 2)
-        {
-            printf("Syntax: run hello name\n");
-        }
-        else
-        {
-            resume(create(xsh_hello, 4096, 20, "hello", 2, nargs, args));
-            wait(can_exit);
+    bool8 cmd_found = FALSE;
+    for(int i=0;i<size;i++) {
+        int cmd_length = strlen(run_commands[i].name)+4;
+        if (strncmp(args[0],run_commands[i].name,cmd_length)==0) {
+            run_commands[i].cfunc(nargs,args);
+            cmd_found = TRUE;
         }
     }
-    else if (strncmp(args[0], "prodcons_bb", 11) == 0)
-    {
-        args++;
-        nargs--;
-        prodcons_bb(nargs, args);
-        wait(can_exit);
-    }
-    else if (strncmp(args[0], "prodcons", 8) == 0)
-    {
-        if (nargs <= 2)
-        {
-            resume(create(xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
-            wait(can_exit);
-        }
-        else
-        {
-            printf("Syntax: run prodcons [counter]\n");
-        }
-    }
-    else
-    {
-        for (int i = 0; i < size; i++)
-        {
-            printf("%s\n", supportedFunctions[i]);
-        }
-        return OK;
+    if(!cmd_found) {
+        list(nargs,args);
     }
 
     return (0);
 }
 
+void list(int nargs, char *args[])
+{
+    for (int i = 0; i < size; i++)
+    {
+        printf("%s\n", run_commands[i].name);
+    }
+    
+}
+
+void hello(int nargs, char *args[])
+{
+    if (nargs != 2)
+    {
+        printf("Syntax: run hello name\n");
+    }
+    else
+    {
+        resume(create(xsh_hello, 4096, 20, "hello", 2, nargs, args));
+        wait(can_exit);
+    }
+}
+
+void prodcons(int nargs, char *args[])
+{
+    if (nargs <= 2)
+    {
+        resume(create(xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
+        wait(can_exit);
+    }
+    else
+    {
+        printf("Syntax: run prodcons [counter]\n");
+    }
+}
+
 void prodcons_bb(int nargs, char *args[])
 {
+    args++;
+    nargs--;
+    
     if (nargs != 4)
     {
         printf("Syntax: run prodcons_bb [# of producer processes] [# of consumer processes] [# of iterations the producer runs] [# of iterations the consumer runs]");
@@ -93,22 +122,26 @@ void prodcons_bb(int nargs, char *args[])
     int prod_iterations = atoi(args[2]);
     int n_consumers = atoi(args[1]);
     int cons_iterations = atoi(args[3]);
-    
-    if (n_producers * prod_iterations != n_consumers * cons_iterations) {
+
+    if (n_producers * prod_iterations != n_consumers * cons_iterations)
+    {
         printf("Iteration Mismatch Error: the number of producer(s) iteration does not match the consumer(s) iteration\n");
     }
-    else {
+    else
+    {
         // int prod_args[1] = {prod_iterations};
         // int cons_args[1] = {cons_iterations};
         total_count = n_producers * prod_iterations;
-        for(int i=0;i<n_producers;i++) {
+        for (int i = 0; i < n_producers; i++)
+        {
             resume(create(producer_bb, 4096, 20, "producer_bb", 2, i, prod_iterations));
         }
-        for(int j=0;j<n_consumers;j++) {
-            resume(create(consumer_bb,4096,20,"consumer_bb",2,j,cons_iterations));
+        for (int j = 0; j < n_consumers; j++)
+        {
+            resume(create(consumer_bb, 4096, 20, "consumer_bb", 2, j, cons_iterations));
         }
         wait(can_exit_prodcons_bb);
-
+        
     }
     signal(can_exit);
     return;
@@ -118,7 +151,7 @@ int check_number(char* s){
     int l=strlen(s);
     int i=0;
     for(i=0;i<l;i++){
-        if(isdigit(s[i])<=0){
+        if(check_number(s[i])<=0){
             return -1;
         }
     }
@@ -140,21 +173,21 @@ void future_prodcons(int nargs, char *args[]) {
   
       if ((strcmp(args[i], "g") != 0) && (strcmp(args[i], "s") != 0) && (check_number(args[i])==-1)){
               printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
-              return 0;
+              return;
           }
         else if ( (strcmp(args[i], "g") == 0) && (check_number(args[i+1])==1)){
             printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
-            return 0;
+            return;
         }
         else if ( (strcmp(args[i], "s") == 0) && (check_number(args[i+1])==-1) )
         {
              printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
-            return 0;
+            return;
         }
         else if ( (check_number(args[i])==1) && (strcmp(args[i-1], "s") != 0) ){
 
             printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n");
-            return 0;
+            return;
 
         }
         
