@@ -188,7 +188,7 @@ void future_prodcons(int nargs, char *args[])
         }
         resume(create(future_fib, 2048, 20, "fib", 2, nargs, args));
     }
-    else
+    else if (strcmp(args[1],"-pc")==0)
     {
         print_sem = semcreate(1);
         future_t *future_exclusive;
@@ -250,7 +250,10 @@ void future_prodcons(int nargs, char *args[])
         sleepms(100);
         future_free(future_exclusive);
     }
-
+    else {
+        printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f NUMBER][--free]\n");
+        return;
+    }
      sleepms(100);
     
 }
