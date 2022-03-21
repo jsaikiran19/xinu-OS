@@ -7,6 +7,7 @@
 #include <future_prodcons.h>
 #include <ctype.h>
 #include <future.h>
+#include <stream.h>
 sid32 can_exit;
 sid32 can_produce;
 sid32 can_consume;
@@ -23,6 +24,8 @@ void hello(int nargs, char *args[]);
 void prodcons(int nargs, char *args[]);
 void prodcons_bb(int nargs, char *args[]);
 void future_prodcons(int nargs, char *args[]);
+void stream_proc_tscdf(int nargs, char *args[]);
+
 
 char *supportedFunctions[] = {
     "hello", "list", "prodcons", "prodcons_bb"};
@@ -37,7 +40,9 @@ const struct command run_commands[] = {
     {"prodcons",
      prodcons},
     {"prodcons_bb",
-     prodcons_bb}};
+     prodcons_bb},
+    {"tscdf",
+     stream_proc_tscdf}};
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
 shellcmd xsh_run(int nargs, char *args[])
@@ -148,6 +153,10 @@ void prodcons_bb(int nargs, char *args[])
     return;
 }
 
+void stream_proc_tscdf(int nargs, char *args[]) {
+    resume(create((void *)stream_proc, 4096, 20, "stream_proc", 2, nargs, args));
+}
+
 int check_number(char *s)
 {
     int l = strlen(s);
@@ -188,7 +197,7 @@ void future_prodcons(int nargs, char *args[])
         }
         resume(create(future_fib, 2048, 20, "fib", 2, nargs, args));
     }
-    else if (strcmp(args[1],"-pc")==0)
+    else if (strcmp(args[1], "-pc") == 0)
     {
         print_sem = semcreate(1);
         future_t *future_exclusive;
@@ -250,10 +259,10 @@ void future_prodcons(int nargs, char *args[])
         sleepms(100);
         future_free(future_exclusive);
     }
-    else {
+    else
+    {
         printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f NUMBER][--free]\n");
         return;
     }
-     sleepms(100);
-    
+    sleepms(100);
 }
