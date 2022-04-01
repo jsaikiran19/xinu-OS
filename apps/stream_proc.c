@@ -1,6 +1,7 @@
 #include <xinu.h>
 #include <stream.h>
 #include <stdio.h>
+#include <run.h>
 #include "tscdf.h"
 
 uint pcport;
@@ -14,7 +15,7 @@ int32 stream_proc(int nargs, char *args[])
     int st, ts, v, head;
     char *ch, c, *a;
     msecs = clkticks;
-    char usage[] = "Usage: -s num_streams -w work_queue_depth -t time_window -o output_time\n";
+    char usage[] = "Usage: run tscdf -s <num_streams> -w <work_queue_depth> -t <time_window> -o <output_time>\n";
 
     /* Parse arguments out of flags */
     /* if not even # args, print error and exit */
@@ -127,7 +128,7 @@ int32 stream_proc(int nargs, char *args[])
 
     time = (((clktime * 1000) + clkticks) - ((secs * 1000) + msecs));
     kprintf("time in ms: %u\n", time);
-
+    signal(can_exit);
     return (0);
 }
 

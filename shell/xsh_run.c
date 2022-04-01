@@ -25,7 +25,7 @@ void prodcons(int nargs, char *args[]);
 void prodcons_bb(int nargs, char *args[]);
 void future_prodcons(int nargs, char *args[]);
 void stream_proc_tscdf(int nargs, char *args[]);
-
+void stream_proc_future(int nargs, char *args[]);
 
 char *supportedFunctions[] = {
     "hello", "list", "prodcons", "prodcons_bb"};
@@ -42,7 +42,9 @@ const struct command run_commands[] = {
     {"prodcons_bb",
      prodcons_bb},
     {"tscdf",
-     stream_proc_tscdf}};
+     stream_proc_tscdf},
+    {"tscdf_fq",
+     stream_proc_future}};
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
 shellcmd xsh_run(int nargs, char *args[])
@@ -153,8 +155,15 @@ void prodcons_bb(int nargs, char *args[])
     return;
 }
 
-void stream_proc_tscdf(int nargs, char *args[]) {
+void stream_proc_tscdf(int nargs, char *args[])
+{
     resume(create((void *)stream_proc, 4096, 20, "stream_proc", 2, nargs, args));
+}
+
+void stream_proc_future(int nargs, char *args[])
+{
+    resume(create(stream_proc_futures, 4096, 20, "stream_proc_futures", 2, nargs, args));
+    wait(can_exit);
 }
 
 int check_number(char *s)
@@ -258,6 +267,42 @@ void future_prodcons(int nargs, char *args[])
         }
         sleepms(100);
         future_free(future_exclusive);
+    }
+    else if (strcmp(args[1], "-pcq") == 0)
+    {
+        if (nargs <= 3)
+        {
+            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+            //   signal(exit_process);
+            return;
+        }
+        int i = 3;
+        while (i < nargs)
+        {
+            // TODO: write your code here to check the validity of arguments
+            // if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && strcmp(args[i], "0") != 0 && atoi(args[i]) <= 0 ){
+            if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && isNumber(args[i]) != 0)
+            {
+                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                //   signal(exit_process);
+                return;
+            }
+            // if (strcmp(args[i], "s") == 0 && strcmp(args[i+1], "0") != 0 && atoi(args[i+1]) <= 0) {
+            if (strcmp(args[i], "s") == 0 && isNumber(args[i + 1]) != 0)
+            {
+                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                //   signal(exit_process);
+                return;
+            }
+            // if ((atoi(args[i]) > 0 || strcmp(args[i], "0") == 0) && strcmp(args[i-1], "s") != 0){
+            if (isNumber(args[i]) == 0 && strcmp(args[i - 1], "s") != 0)
+            {
+                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                //   signal(exit_process);
+                return;
+            }
+            i++;
+        }
     }
     else
     {

@@ -15,4 +15,5 @@ extern struct stream
     struct data_element *queue;
 };
 int32 stream_proc(int nargs, char *args[]);
+int32 stream_proc_futures(int nargs, char *args[]);
 void stream_consumer(int32 id, struct stream *str);
