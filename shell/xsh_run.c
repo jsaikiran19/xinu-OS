@@ -251,19 +251,19 @@ void future_prodcons(int nargs, char *args[])
         {
             // TODO: write your code here to check the validity of arguments
             // if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && strcmp(args[i], "0") != 0 && atoi(args[i]) <= 0 ){
-            if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && check_number(args[i]) != 0)
+            if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && check_number(args[i]) != 1)
             {
                 printf(errorMsg);
                 return;
             }
             // if (strcmp(args[i], "s") == 0 && strcmp(args[i+1], "0") != 0 && atoi(args[i+1]) <= 0) {
-            if (strcmp(args[i], "s") == 0 && check_number(args[i + 1]) != 0)
+            if (strcmp(args[i], "s") == 0 && check_number(args[i + 1]) != 1)
             {
                 printf(errorMsg);
                 return;
             }
             // if ((atoi(args[i]) > 0 || strcmp(args[i], "0") == 0) && strcmp(args[i-1], "s") != 0){
-            if (check_number(args[i]) == 0 && strcmp(args[i - 1], "s") != 0)
+            if (check_number(args[i]) == 0 && strcmp(args[i - 1], "s") != 1)
             {
                 printf(errorMsg);
                 return;
@@ -286,7 +286,7 @@ void future_prodcons(int nargs, char *args[])
     future_exclusive = future_alloc(strcmp(args[1], "-pcq") == 0 ? FUTURE_QUEUE : FUTURE_EXCLUSIVE, sizeof(int), 1);
     if (strcmp(args[1], "-pcq") == 0)
     {
-        if (check_number(args[2]) != 0)
+        if (check_number(args[2]) != 1)
         {
             printf(errorMsg);
             //   signal(exit_process);
