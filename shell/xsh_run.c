@@ -182,67 +182,68 @@ int check_number(char *s)
 
 void future_prodcons(int nargs, char *args[])
 {
-
+    char errorMsg[] = "Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n ";
     if (nargs < 2)
     {
-        printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f NUMBER][--free]\n");
+        printf(errorMsg);
         return;
     }
     if (strcmp(args[1], "--free") == 0)
     {
         if (nargs > 2)
         {
-            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f NUMBER][--free]\n");
+            printf(errorMsg);
             return;
         }
         resume(create(future_free_test, 2048, 20, "free", 2, nargs, args));
     }
-    else if (strcmp(args[1], "-f") == 0)
-    {
-        if (nargs > 3 || nargs == 2)
-        {
-            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f NUMBER][--free]\n");
-            return;
-        }
-        resume(create(future_fib, 2048, 20, "fib", 2, nargs, args));
-    }
     int i = 2;
     if (strcmp(args[1], "-pc") == 0)
     {
-
         while (i < nargs)
         {
 
             if ((strcmp(args[i], "g") != 0) && (strcmp(args[i], "s") != 0) && (check_number(args[i]) == -1))
             {
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                printf(errorMsg);
                 return;
             }
             else if ((strcmp(args[i], "g") == 0) && (check_number(args[i + 1]) == 1))
             {
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                printf(errorMsg);
                 return;
             }
             else if ((strcmp(args[i], "s") == 0) && (check_number(args[i + 1]) == -1))
             {
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                printf(errorMsg);
                 return;
             }
             else if ((check_number(args[i]) == 1) && (strcmp(args[i - 1], "s") != 0))
             {
 
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+                printf(errorMsg);
                 return;
             }
 
             i++;
         }
     }
+    else if (strcmp(args[1], "-f") == 0)
+    {
+        if (isNumber(args[2]) != 0)
+        {
+            printf(errorMsg);
+            //   signal(exit_process);
+            return;
+        }
+        future_fib(nargs, args);
+        return;
+    }
     else if (strcmp(args[1], "-pcq") == 0)
     {
         if (nargs <= 3)
         {
-            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+            printf(errorMsg);
             return;
         }
         int i = 3;
@@ -252,22 +253,19 @@ void future_prodcons(int nargs, char *args[])
             // if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && strcmp(args[i], "0") != 0 && atoi(args[i]) <= 0 ){
             if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && check_number(args[i]) != 0)
             {
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
-                //   signal(exit_process);
+                printf(errorMsg);
                 return;
             }
             // if (strcmp(args[i], "s") == 0 && strcmp(args[i+1], "0") != 0 && atoi(args[i+1]) <= 0) {
             if (strcmp(args[i], "s") == 0 && check_number(args[i + 1]) != 0)
             {
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
-                //   signal(exit_process);
+                printf(errorMsg);
                 return;
             }
             // if ((atoi(args[i]) > 0 || strcmp(args[i], "0") == 0) && strcmp(args[i-1], "s") != 0){
             if (check_number(args[i]) == 0 && strcmp(args[i - 1], "s") != 0)
             {
-                printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
-                //   signal(exit_process);
+                printf(errorMsg);
                 return;
             }
             i++;
@@ -275,7 +273,12 @@ void future_prodcons(int nargs, char *args[])
     }
     else
     {
-        printf("Syntax: run futest [-pc [g ...] [s VALUE ...]|-f NUMBER][--free]\n");
+        if (nargs != 2)
+        {
+            printf(errorMsg);
+            return;
+        }
+        future_free_test(nargs, args);
         return;
     }
     print_sem = semcreate(1);
@@ -283,9 +286,9 @@ void future_prodcons(int nargs, char *args[])
     future_exclusive = future_alloc(strcmp(args[1], "-pcq") == 0 ? FUTURE_QUEUE : FUTURE_EXCLUSIVE, sizeof(int), 1);
     if (strcmp(args[1], "-pcq") == 0)
     {
-        if (check_number(args[2]) != 0)
+        if (isNumber(args[2]) != 0)
         {
-            printf("Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n");
+            printf(errorMsg);
             //   signal(exit_process);
             return;
         }
@@ -296,6 +299,7 @@ void future_prodcons(int nargs, char *args[])
         future_exclusive = future_alloc(FUTURE_EXCLUSIVE, sizeof(int), 1);
     }
     char *val;
+
     int num_args = i; // keeping number of args to create the array
     i = 2;            // reseting the index
     val = (char *)getmem(num_args);
@@ -321,5 +325,4 @@ void future_prodcons(int nargs, char *args[])
     }
     sleepms(100);
     future_free(future_exclusive);
-    sleepms(100);
 }
