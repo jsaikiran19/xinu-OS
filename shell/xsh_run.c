@@ -263,7 +263,7 @@ void future_prodcons(int nargs, char *args[])
                 return;
             }
             // if ((atoi(args[i]) > 0 || strcmp(args[i], "0") == 0) && strcmp(args[i-1], "s") != 0){
-            if (check_number(args[i]) == 0 && strcmp(args[i - 1], "s") != 1)
+            if (check_number(args[i]) == 1 && strcmp(args[i - 1], "s") != 0)
             {
                 printf(errorMsg);
                 return;
