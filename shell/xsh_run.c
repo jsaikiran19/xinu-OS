@@ -230,7 +230,7 @@ void future_prodcons(int nargs, char *args[])
     }
     else if (strcmp(args[1], "-f") == 0)
     {
-        if (isNumber(args[2]) != 0)
+        if (check_number(args[2]) != 0)
         {
             printf(errorMsg);
             //   signal(exit_process);
@@ -286,7 +286,7 @@ void future_prodcons(int nargs, char *args[])
     future_exclusive = future_alloc(strcmp(args[1], "-pcq") == 0 ? FUTURE_QUEUE : FUTURE_EXCLUSIVE, sizeof(int), 1);
     if (strcmp(args[1], "-pcq") == 0)
     {
-        if (isNumber(args[2]) != 0)
+        if (check_number(args[2]) != 0)
         {
             printf(errorMsg);
             //   signal(exit_process);
