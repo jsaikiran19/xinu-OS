@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <future.h>
 #include <stream.h>
+#include <fs.h>
 sid32 can_exit;
 sid32 can_produce;
 sid32 can_consume;
@@ -26,6 +27,7 @@ void prodcons_bb(int nargs, char *args[]);
 void future_prodcons(int nargs, char *args[]);
 void stream_proc_tscdf(int nargs, char *args[]);
 void stream_proc_future(int nargs, char *args[]);
+int fstest(int nargs, char *args[]);
 
 char *supportedFunctions[] = {
     "hello", "list", "prodcons", "prodcons_bb"};
@@ -44,7 +46,9 @@ const struct command run_commands[] = {
     {"tscdf",
      stream_proc_tscdf},
     {"tscdf_fq",
-     stream_proc_future}};
+     stream_proc_future},
+    {"fstest",
+     fstest}};
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
 shellcmd xsh_run(int nargs, char *args[])
