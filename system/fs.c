@@ -393,16 +393,12 @@ int fs_create(char *filename, int mode) {
   return SYSERR;
 }
 
-int fs_seek(int fd, int offset) {
-
-  if(isbadfd(fd)){
-      return SYSERR;
+int fs_seek(int fd, int offset)
+{
+  if (isbadfd(fd) || oft[fd].state == FSTATE_CLOSED || offset < 0 || offset > oft[fd].in.size)
+  {
+    return SYSERR;
   }
-   
-  if(offset < 0 || offset > oft[fd].in.size){
-      return SYSERR;
-  }
-
   oft[fd].fileptr = offset;
   return OK;
 }
