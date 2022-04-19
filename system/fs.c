@@ -508,10 +508,42 @@ int fs_write(int fd, void *buf, int nbytes) {
 }
 
 int fs_link(char *src_filename, char* dst_filename) {
+  dirent_t entries[fsd.root_dir.numentries];
+  int inode_num;
+  for(int i=0;i<fsd.root_dir.numentries;i++){
+    
+    if(strcmp(fsd.root_dir.entry[i].name,src_filename)==0 && fsd.root_dir.entry[i].inode_num!=EMPTY ){
+    inode_num = fsd.root_dir.entry[i].inode_num;
+    strcpy(fsd.root_dir.entry[fsd.root_dir.numentries].name,dst_filename);
+    fsd.root_dir.entry[fsd.root_dir.numentries].inode_num=inode_num;
+    fsd.root_dir.numentries++;
+    }
+  }
     return SYSERR;
 }
 
 int fs_unlink(char *filename) {
+  inode_t node;
+  for(int i=0;i<fsd.root_dir.numentries;i++) {
+    if(strcmp(fsd.root_dir.entry[i].name, filename)==0 && fsd.root_dir.entry[i].inode_num!=EMPTY) {
+      int inode_num = fsd.root_dir.entry[i].inode_num;
+      _fs_get_inode_by_num(0, inode_num, &node);
+      if(node.nlink>1) {
+       
+        fsd.root_dir.entry[i].inode_num = EMPTY;
+        
+      }
+      else if(node.nlink==1) {
+        
+      node.id     = EMPTY;
+      node.type   = 0;
+      node.nlink  = 0;
+      node.device = 0;
+      node.size   = 0;
+      --fsd.inodes_used;
+      }
+    }
+  }
     return SYSERR;
 }
 
