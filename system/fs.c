@@ -517,6 +517,7 @@ int fs_link(char *src_filename, char* dst_filename) {
     strcpy(fsd.root_dir.entry[fsd.root_dir.numentries].name,dst_filename);
     fsd.root_dir.entry[fsd.root_dir.numentries].inode_num=inode_num;
     fsd.root_dir.numentries++;
+    return OK;
     }
   }
     return SYSERR;
@@ -542,6 +543,7 @@ int fs_unlink(char *filename) {
       node.size   = 0;
       --fsd.inodes_used;
       }
+      return OK;
     }
   }
     return SYSERR;
