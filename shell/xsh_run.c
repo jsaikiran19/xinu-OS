@@ -28,6 +28,7 @@ void future_prodcons(int nargs, char *args[]);
 void stream_proc_tscdf(int nargs, char *args[]);
 void stream_proc_future(int nargs, char *args[]);
 int fstest(int nargs, char *args[]);
+int fs_test(int nargs, char *args[]);
 
 char *supportedFunctions[] = {
     "hello", "list", "prodcons", "prodcons_bb"};
@@ -48,7 +49,7 @@ const struct command run_commands[] = {
     {"tscdf_fq",
      stream_proc_future},
     {"fstest",
-     fstest}};
+     fs_test}};
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
 shellcmd xsh_run(int nargs, char *args[])
@@ -157,6 +158,10 @@ void prodcons_bb(int nargs, char *args[])
     }
     signal(can_exit);
     return;
+}
+
+int fs_test(int nargs, char *args[]) {
+    resume(create((void*)fstest, 4096, 20,"fs_tset",2,nargs,args));
 }
 
 void stream_proc_tscdf(int nargs, char *args[])
