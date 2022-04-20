@@ -512,7 +512,7 @@ int fs_link(char *src_filename, char* dst_filename) {
         return SYSERR;
   int inode_num;
   inode_t node;
-  int total_entries = fsd.root_dir.numentries
+  int total_entries = fsd.root_dir.numentries;
   for(int i=0;i<total_entries;i++){
     dirent_t cur_entry = fsd.root_dir.entry[i];
     if(strcmp(cur_entry.name,src_filename)==0 && cur_entry.inode_num!=EMPTY ){
