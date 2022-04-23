@@ -44,12 +44,13 @@ const struct command run_commands[] = {
      prodcons},
     {"prodcons_bb",
      prodcons_bb},
-    {"tscdf",
-     stream_proc_tscdf},
-    {"tscdf_fq",
-     stream_proc_future},
-    {"fstest",
-     fs_test}};
+    // {"tscdf",
+    //  stream_proc_tscdf},
+    // {"tscdf_fq",
+    //  stream_proc_future},
+    // {"fstest",
+    //  fs_test}
+     };
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
 shellcmd xsh_run(int nargs, char *args[])
