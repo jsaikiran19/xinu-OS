@@ -210,7 +210,7 @@ void future_prodcons(int nargs, char *args[])
     int i = 2;
     if (strcmp(args[1], "-pc") == 0)
     {
-        if (nargs < 3)
+        if (nargs <= 3)
         {
             printf(errorMsg);
             return;
@@ -264,20 +264,16 @@ void future_prodcons(int nargs, char *args[])
         int i = 3;
         while (i < nargs)
         {
-            // TODO: write your code here to check the validity of arguments
-            // if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && strcmp(args[i], "0") != 0 && atoi(args[i]) <= 0 ){
             if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && check_number(args[i]) != 1)
             {
                 printf(errorMsg);
                 return;
             }
-            // if (strcmp(args[i], "s") == 0 && strcmp(args[i+1], "0") != 0 && atoi(args[i+1]) <= 0) {
             if (strcmp(args[i], "s") == 0 && check_number(args[i + 1]) != 1)
             {
                 printf(errorMsg);
                 return;
             }
-            // if ((atoi(args[i]) > 0 || strcmp(args[i], "0") == 0) && strcmp(args[i-1], "s") != 0){
             if (check_number(args[i]) == 1 && strcmp(args[i - 1], "s") != 0)
             {
                 printf(errorMsg);
