@@ -191,7 +191,7 @@ int check_number(char *s)
 
 void future_prodcons(int nargs, char *args[])
 {
-    char errorMsg[] = "Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n ";
+    char errorMsg[] = "Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n";
     if (nargs < 2)
     {
         printf(errorMsg);
