@@ -160,8 +160,9 @@ void prodcons_bb(int nargs, char *args[])
     return;
 }
 
-int fs_test(int nargs, char *args[]) {
-    resume(create((void*)fstest, 4096, 20,"fs_tset",2,nargs,args));
+int fs_test(int nargs, char *args[])
+{
+    resume(create((void *)fstest, 4096, 20, "fs_tset", 2, nargs, args));
 }
 
 void stream_proc_tscdf(int nargs, char *args[])
@@ -209,6 +210,11 @@ void future_prodcons(int nargs, char *args[])
     int i = 2;
     if (strcmp(args[1], "-pc") == 0)
     {
+        if (nargs < 3)
+        {
+            printf(errorMsg);
+            return;
+        }
         while (i < nargs)
         {
 
