@@ -330,9 +330,9 @@ int fs_open(char *filename, int flags) {
     
     {
       dirent_t cur_entry = fsd.root_dir.entry[i];
-        if (oft[i].state != FSTATE_OPEN && strcmp(cur_entry.name, filename) == 0)
+        if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
         {
-            int inode_num = cur_entry.inode_num;
+            int inode_num = fsd.root_dir.entry[i].inode_num;
             _fs_get_inode_by_num(0, inode_num, &node);
             oft[i].state = FSTATE_OPEN;
             oft[i].fileptr = 0;
