@@ -317,32 +317,27 @@ int fs_open(char *filename, int flags) {
 
     if (flags != O_RDONLY && flags != O_WRONLY && flags != O_RDWR)
     {
-        // printf("Invalid File Mode");
         return SYSERR;
     }
-    int i;
-    struct inode node;
-
-    if (fsd.root_dir.numentries <= 0)
+    inode_t node;
+     int n_entries = fsd.root_dir.numentries;
+    if (n_entries <=0)
     {
         return SYSERR;
     }
 
-    for (i = 0; i < fsd.root_dir.numentries; i++)
+    for (int i = 0; i < n_entries; i++)
+    
     {
-        if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
+      dirent_t cur_entry = fsd.root_dir.entry[i];
+        if (oft[i].state != FSTATE_OPEN && strcmp(cur_entry.name, filename) == 0)
         {
-            int inode_num = fsd.root_dir.entry[i].inode_num;
-
-            _fs_get_inode_by_num(0, inode_num, &node);
-
+            int inode_num = cur_entry.inode_num;
             oft[i].state = FSTATE_OPEN;
             oft[i].fileptr = 0;
-            oft[i].in = node;
+            _fs_get_inode_by_num(0, inode_num, &oft[i].in);
             oft[i].de = &fsd.root_dir.entry[i];
             oft[i].flag = flags;
-
-            _fs_put_inode_by_num(0, inode_num, &oft[i].in);
 
             return i;
         }
@@ -351,14 +346,8 @@ int fs_open(char *filename, int flags) {
 }
 
 int fs_close(int fd) {
-    if (oft[fd].state == FSTATE_CLOSED)
+    if (oft[fd].state == FSTATE_CLOSED || isbadfd(fd))
     {
-        // printf("State is closed already.\n");
-        return SYSERR;
-    }
-    else if (fd < 0 || fd >= NUM_FD)
-    {
-        // printf("File Invalid\n");
         return SYSERR;
     }
     oft[fd].state = FSTATE_CLOSED;
@@ -368,25 +357,31 @@ int fs_close(int fd) {
 
 
 int fs_create(char *filename, int mode) {
-  for(int i=0;i<fsd.root_dir.numentries;i++){
+  int n_entries = fsd.root_dir.numentries;
+  
+  if(n_entries<DIRECTORY_SIZE) return SYSERR;
+
+  for(int i=0;i<n_entries;i++){
     if(strcmp(fsd.root_dir.entry[i].name,filename)==0){
       return SYSERR;
     }
   }
-  if(mode==O_CREAT && fsd.root_dir.numentries<DIRECTORY_SIZE){
-    struct inode node;
-    int status=_fs_get_inode_by_num(0,fsd.inodes_used,&node);
+
+  
+  if(mode==O_CREAT){
+    inode_t node;
+    _fs_get_inode_by_num(0,fsd.inodes_used,&node);
 
     node.id=fsd.inodes_used;
     node.type=INODE_TYPE_FILE;
+    node.nlink=1;
     node.device=0;
     node.size=0;
-    node.nlink=1;
     fsd.inodes_used++;
     
-    int status1=_fs_put_inode_by_num(0,node.id,&node);
-    strcpy(fsd.root_dir.entry[fsd.root_dir.numentries].name,filename);
-    fsd.root_dir.entry[fsd.root_dir.numentries].inode_num=node.id;
+    _fs_put_inode_by_num(0,node.id,&node);
+    strcpy(fsd.root_dir.entry[n_entries].name,filename);
+    fsd.root_dir.entry[n_entries].inode_num=node.id;
     fsd.root_dir.numentries++;
     return fs_open(filename,O_RDWR);
   }
@@ -395,43 +390,11 @@ int fs_create(char *filename, int mode) {
 
 int fs_seek(int fd, int offset)
 {
-  if (isbadfd(fd) || oft[fd].state == FSTATE_CLOSED || offset < 0 || offset > oft[fd].in.size)
-  {
-    return SYSERR;
-  }
-  oft[fd].fileptr = offset;
-  return OK;
+  return SYSERR;
 }
 
 int fs_read(int fd, void *buf, int nbytes) {
-    // nbytes - number of bytes to read 
-    if (oft[fd].flag == O_WRONLY || oft[fd].state != FSTATE_OPEN )
-        return SYSERR;
-    // calculate remaining bytes
-    if (nbytes > (oft[fd].in.size - oft[fd].fileptr) ) {
-        nbytes = (oft[fd].in.size - oft[fd].fileptr);
-    }
-
-    int bytes_to_read_copy = nbytes;
-    int first_block_index = oft[fd].fileptr / fsd.blocksz;
-    int block_offset = oft[fd].fileptr % fsd.blocksz;
-    int block_read_count = fsd.blocksz -  block_offset;
-
-    while (nbytes > 0) {
-        if (block_read_count > 0) {
-    	      bs_bread(dev0, oft[fd].in.blocks[first_block_index], block_offset, buf, block_read_count);
-  	    }
-      
-        first_block_index++;
-        block_offset = 0;
-        nbytes -= block_read_count;
-        buf = (char *)buf + block_read_count;
-        block_read_count = fsd.blocksz < nbytes ? fsd.blocksz : nbytes;
-    }
-    
-    oft[fd].fileptr += bytes_to_read_copy;
-  
-  return bytes_to_read_copy;
+    return SYSERR;
 }
 
 static int get_free_block() {
@@ -445,66 +408,7 @@ static int get_free_block() {
 }
 
 int fs_write(int fd, void *buf, int nbytes) {
-    if (oft[fd].state != FSTATE_OPEN || oft[fd].flag == O_RDONLY) {
-        return SYSERR;
-    }
-    int bytes_to_write = nbytes;
-    int bytes_to_write_copy = bytes_to_write;
-    int inode_block_index = oft[fd].fileptr / fsd.blocksz;
-    int num_avail_blocks = (oft[fd].in.size + fsd.blocksz - 1) / fsd.blocksz;
-    int fail = 0;
-    int return_size_on_fail = 0;
-    int free_block_index = -1;
-    if(num_avail_blocks > 0){
-  	    free_block_index = oft[fd].in.blocks[inode_block_index]; 
-    }
-    else{
-  	    free_block_index = get_free_block();
-  	    if(free_block_index != -1){
-  		      oft[fd].in.blocks[inode_block_index] = free_block_index;
-  	    }
-  	    else{ fail = 1; return_size_on_fail = 0;}
-    }
-
-    int block_offset = oft[fd].fileptr % fsd.blocksz;
-    int block_write_count = fsd.blocksz - block_offset; 
-
-    while (fail!=1 && bytes_to_write > 0) {
-        if (block_write_count > 0) {
-            bs_bwrite(dev0, free_block_index, block_offset, buf, block_write_count);
-        }
-
-    block_offset = 0;
-    bytes_to_write -= block_write_count;
-    buf = (char *)buf + block_write_count;
-    block_write_count = fsd.blocksz < bytes_to_write ? fsd.blocksz : bytes_to_write;
-    ++inode_block_index;
-    if (bytes_to_write > 0) {
-    	if(inode_block_index < num_avail_blocks)
-    	{
-    		free_block_index = oft[fd].in.blocks[inode_block_index];
-    	}
-    	else
-    	{
-		      free_block_index = get_free_block();
-		      if(free_block_index != -1)
-			  	{
-			  		oft[fd].in.blocks[inode_block_index] = free_block_index;
-			  	}
-			  	else{ fail = 1; return_size_on_fail =  bytes_to_write_copy - bytes_to_write; break;}
-    	}
-    }
-  }
-
-  if(fail == 1) bytes_to_write_copy = return_size_on_fail;
-  oft[fd].fileptr += bytes_to_write_copy;
-
-  int fpt = oft[fd].fileptr;
-  int sz = oft[fd].in.size;
-
-  oft[fd].in.size = sz > fpt ? sz : fpt;
-  _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
-  return bytes_to_write_copy;
+    return SYSERR;
 }
 
 int fs_link(char *src_filename, char* dst_filename) {

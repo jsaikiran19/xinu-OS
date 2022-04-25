@@ -44,12 +44,12 @@ const struct command run_commands[] = {
      prodcons},
     {"prodcons_bb",
      prodcons_bb},
-    // {"tscdf",
-    //  stream_proc_tscdf},
-    // {"tscdf_fq",
-    //  stream_proc_future},
-    // {"fstest",
-    //  fs_test}
+    {"tscdf",
+     stream_proc_tscdf},
+    {"tscdf_fq",
+     stream_proc_future},
+    {"fstest",
+     fs_test}
      };
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
@@ -193,7 +193,7 @@ int check_number(char *s)
 
 void future_prodcons(int nargs, char *args[])
 {
-    char errorMsg[] = "Syntax: run futest [-pc [g ...] [s VALUE ...]|-f]\n";
+    char errorMsg[] = "Syntax: run futest [-pc [g ...] [s VALUE ...]] | [-pcq LENGTH [g ...] [s VALUE ...]] | [-f NUMBER] | [--free]\n ";
     if (nargs < 2)
     {
         printf(errorMsg);
