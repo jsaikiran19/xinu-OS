@@ -333,12 +333,12 @@ int fs_open(char *filename, int flags) {
         if (oft[i].state != FSTATE_OPEN && strcmp(cur_entry.name, filename) == 0)
         {
             int inode_num = cur_entry.inode_num;
+            _fs_get_inode_by_num(0, inode_num, &oft[i].in);
             oft[i].state = FSTATE_OPEN;
             oft[i].fileptr = 0;
-            _fs_get_inode_by_num(0, inode_num, &oft[i].in);
             oft[i].de = &fsd.root_dir.entry[i];
             oft[i].flag = flags;
-
+            _fs_put_inode_by_num(0, inode_num, &oft[i].in);
             return i;
         }
     }
