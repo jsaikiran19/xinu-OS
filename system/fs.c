@@ -323,7 +323,7 @@ int fs_open(char *filename, int flags) {
     {
         return SYSERR;
     }
-    
+    struct inode d_inode;
     for (int i = 0; i < fsd.root_dir.numentries; i++)
     
     {
@@ -333,6 +333,7 @@ int fs_open(char *filename, int flags) {
             _fs_get_inode_by_num(0, num, &oft[i].in);
             oft[i].state = FSTATE_OPEN;
             oft[i].fileptr = 0;
+            oft[i].in = d_inode;
             oft[i].de = &fsd.root_dir.entry[i];
             oft[i].flag = flags;
             return i;
