@@ -449,6 +449,7 @@ int fs_unlink(char *filename) {
       node.nlink  = 0;
       node.device = 0;
       node.size   = 0;
+      _fs_put_inode_by_num(0, inode_num, &node);
       --fsd.inodes_used;
       }
       return OK;
