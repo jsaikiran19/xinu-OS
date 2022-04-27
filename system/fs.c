@@ -323,17 +323,15 @@ int fs_open(char *filename, int flags) {
     {
         return SYSERR;
     }
-    struct inode d_inode;
     for (int i = 0; i < fsd.root_dir.numentries; i++)
     
     {
         if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
         {
             int num = fsd.root_dir.entry[i].inode_num;
-            _fs_get_inode_by_num(0, num, &d_inode);
+            _fs_get_inode_by_num(0, num, &oft[i].in);
             oft[i].state = FSTATE_OPEN;
             oft[i].fileptr = 0;
-            oft[i].in = d_inode;
             oft[i].de = &fsd.root_dir.entry[i];
             oft[i].flag = flags;
             return i;
@@ -355,7 +353,7 @@ int fs_close(int fd) {
 
 int fs_create(char *filename, int mode) {
   
-  if(fsd.root_dir.numentries<DIRECTORY_SIZE) return SYSERR;
+  if(fsd.root_dir.numentries >= DIRECTORY_SIZE) return SYSERR;
 
   for(int i=0;i<fsd.root_dir.numentries;i++){
     if(strcmp(fsd.root_dir.entry[i].name,filename)==0){
