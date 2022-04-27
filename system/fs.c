@@ -415,8 +415,8 @@ int fs_link(char *src_filename, char* dst_filename) {
   inode_t node;
   int n_entries = fsd.root_dir.numentries;
   for(int i=0;i<n_entries;i++){
-    if(strcmp(fsd.root_dir.entry[i].name,src_filename)==0 && inode_num!=EMPTY ){
     int inode_num = fsd.root_dir.entry[i].inode_num;
+    if(strcmp(fsd.root_dir.entry[i].name,src_filename)==0 && inode_num!=EMPTY ){
     strcpy(fsd.root_dir.entry[n_entries].name,dst_filename);
     fsd.root_dir.entry[n_entries].inode_num=inode_num;
     fsd.root_dir.numentries++;
