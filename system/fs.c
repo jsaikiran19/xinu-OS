@@ -319,27 +319,22 @@ int fs_open(char *filename, int flags) {
     {
         return SYSERR;
     }
-    inode_t node;
-     int n_entries = fsd.root_dir.numentries;
-    if (n_entries <=0)
+    if (fsd.root_dir.numentries <=0)
     {
         return SYSERR;
     }
-
-    for (int i = 0; i < n_entries; i++)
+    
+    for (int i = 0; i < fsd.root_dir.numentries; i++)
     
     {
-      dirent_t cur_entry = fsd.root_dir.entry[i];
         if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
         {
-            int inode_num = fsd.root_dir.entry[i].inode_num;
-            _fs_get_inode_by_num(0, inode_num, &node);
+            int num = fsd.root_dir.entry[i].inode_num;
+            _fs_get_inode_by_num(0, num, &oft[i].in);
             oft[i].state = FSTATE_OPEN;
             oft[i].fileptr = 0;
-            oft[i].in = node;
             oft[i].de = &fsd.root_dir.entry[i];
             oft[i].flag = flags;
-            _fs_put_inode_by_num(0, inode_num, &oft[i].in);
             return i;
         }
     }
@@ -358,18 +353,20 @@ int fs_close(int fd) {
 
 
 int fs_create(char *filename, int mode) {
-  int n_entries = fsd.root_dir.numentries;
   
-  if(n_entries<DIRECTORY_SIZE) return SYSERR;
+  if(fsd.root_dir.numentries<DIRECTORY_SIZE) return SYSERR;
 
-  for(int i=0;i<n_entries;i++){
+  for(int i=0;i<fsd.root_dir.numentries;i++){
     if(strcmp(fsd.root_dir.entry[i].name,filename)==0){
       return SYSERR;
     }
   }
 
+  if(mode!=O_CREAT) {
+    return SYSERR;
+  }
+
   
-  if(mode==O_CREAT){
     inode_t node;
     _fs_get_inode_by_num(0,fsd.inodes_used,&node);
 
@@ -381,12 +378,10 @@ int fs_create(char *filename, int mode) {
     fsd.inodes_used++;
     
     _fs_put_inode_by_num(0,node.id,&node);
-    strcpy(fsd.root_dir.entry[n_entries].name,filename);
-    fsd.root_dir.entry[n_entries].inode_num=node.id;
+    strcpy(fsd.root_dir.entry[fsd.root_dir.numentries].name,filename);
+    fsd.root_dir.entry[fsd.root_dir.numentries].inode_num=node.id;
     fsd.root_dir.numentries++;
     return fs_open(filename,O_RDWR);
-  }
-  return SYSERR;
 }
 
 int fs_seek(int fd, int offset)
