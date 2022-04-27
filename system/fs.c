@@ -411,11 +411,12 @@ int fs_write(int fd, void *buf, int nbytes) {
 int fs_link(char *src_filename, char* dst_filename) {
   if (strlen(src_filename) > FILENAMELEN || strlen(dst_filename) > FILENAMELEN)
         return SYSERR;
-  int inode_num = fsd.root_dir.entry[i].inode_num;
+  
   inode_t node;
   int n_entries = fsd.root_dir.numentries;
   for(int i=0;i<n_entries;i++){
     if(strcmp(fsd.root_dir.entry[i].name,src_filename)==0 && inode_num!=EMPTY ){
+    int inode_num = fsd.root_dir.entry[i].inode_num;
     strcpy(fsd.root_dir.entry[n_entries].name,dst_filename);
     fsd.root_dir.entry[n_entries].inode_num=inode_num;
     fsd.root_dir.numentries++;
