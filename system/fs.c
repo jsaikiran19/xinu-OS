@@ -319,11 +319,12 @@ int fs_open(char *filename, int flags) {
     {
         return SYSERR;
     }
-    if (fsd.root_dir.numentries <=0)
+    int n_entries = fsd.root_dir.numentries;
+    if (n_entries <=0)
     {
         return SYSERR;
     }
-    for (int i = 0; i < fsd.root_dir.numentries; i++)
+    for (int i = 0; i < n_entries; i++)
     
     {
         if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
@@ -353,9 +354,10 @@ int fs_close(int fd) {
 
 int fs_create(char *filename, int mode) {
   
-  if(fsd.root_dir.numentries >= DIRECTORY_SIZE) return SYSERR;
+  int n_entries = fsd.root_dir.numentries;
+  if(n_entries >= DIRECTORY_SIZE) return SYSERR;
 
-  for(int i=0;i<fsd.root_dir.numentries;i++){
+  for(int i=0;i<n_entries;i++){
     if(strcmp(fsd.root_dir.entry[i].name,filename)==0){
       return SYSERR;
     }
@@ -377,8 +379,8 @@ int fs_create(char *filename, int mode) {
     fsd.inodes_used++;
     
     _fs_put_inode_by_num(0,node.id,&node);
-    strcpy(fsd.root_dir.entry[fsd.root_dir.numentries].name,filename);
-    fsd.root_dir.entry[fsd.root_dir.numentries].inode_num=node.id;
+    strcpy(fsd.root_dir.entry[n_entries].name,filename);
+    fsd.root_dir.entry[n_entries].inode_num=node.id;
     fsd.root_dir.numentries++;
     return fs_open(filename,O_RDWR);
 }
