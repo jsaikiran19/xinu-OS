@@ -411,23 +411,17 @@ int fs_write(int fd, void *buf, int nbytes) {
 int fs_link(char *src_filename, char* dst_filename) {
   if (strlen(src_filename) > FILENAMELEN || strlen(dst_filename) > FILENAMELEN)
         return SYSERR;
-  int inode_num;
+  int inode_num = fsd.root_dir.entry[i].inode_num;
   inode_t node;
-  int total_entries = fsd.root_dir.numentries;
-  for(int i=0;i<total_entries;i++){
-    dirent_t cur_entry = fsd.root_dir.entry[i];
-    if(strcmp(cur_entry.name,src_filename)==0 && cur_entry.inode_num!=EMPTY ){
-    inode_num = cur_entry.inode_num;
-    strcpy(fsd.root_dir.entry[total_entries].name,dst_filename);
-    fsd.root_dir.entry[total_entries].inode_num=inode_num;
+  int n_entries = fsd.root_dir.numentries;
+  for(int i=0;i<n_entries;i++){
+    if(strcmp(fsd.root_dir.entry[i].name,src_filename)==0 && inode_num!=EMPTY ){
+    strcpy(fsd.root_dir.entry[n_entries].name,dst_filename);
+    fsd.root_dir.entry[n_entries].inode_num=inode_num;
     fsd.root_dir.numentries++;
     int code = _fs_get_inode_by_num(0, inode_num, &node);
-    if (code==SYSERR){
-      return SYSERR;
-    }
-    if(code!=SYSERR) {
-      node.nlink++;
-    }
+    node.nlink++;
+    _fs_put_inode_by_num(0, inode_num, &node);
     return OK;
     }
   }
