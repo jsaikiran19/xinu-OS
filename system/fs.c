@@ -463,7 +463,7 @@ int fs_read(int fd, void *buf, int nbytes)
   {
     if (remaining_count > 0)
     {
-      bs_bread(0, oft[fd].in.blocks[block_index], offset, buff, remaining_count);
+      bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, remaining_count);
     }
     block_index++;
     nbytes -= remaining_count;
@@ -502,7 +502,7 @@ int fs_write(int fd, void *buf, int nbytes)
   int offset = oft[fd].fileptr % fsd.blocksz;
   int available_blocks = (oft[fd].in.size + fsd.blocksz - 1) / fsd.blocksz;
   int remaining_count = fsd.blocksz - offset;
-  bool8 free_block = true;
+  bool8 free_block = TRUE;
   int ret_val = 0;
   int free_index = -1;
   if (available_blocks < 0)
@@ -514,7 +514,7 @@ int fs_write(int fd, void *buf, int nbytes)
     }
     else
     {
-      free_block = false;
+      free_block = FALSE;
       ret_val = 0;
     }
   }
@@ -548,7 +548,7 @@ int fs_write(int fd, void *buf, int nbytes)
           }
           else
           {
-            free_block = false;
+            free_block = FALSE;
             ret_val = to_write_2 - to_write;
             break;
           }
@@ -566,7 +566,7 @@ int fs_write(int fd, void *buf, int nbytes)
   oft[fd].fileptr += to_write_2;
 
   int fp = oft[fd].fileptr;
-  int size = oft[fd].in.size;
+  size = oft[fd].in.size;
 
   oft[fd].in.size = size > fp ? size : fp;
   _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
