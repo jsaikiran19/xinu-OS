@@ -453,7 +453,7 @@ int fs_read(int fd, void *buf, int nbytes)
   {
     return SYSERR;
   }
-  nbytes = nbytes > size - oft[fd].fileptr ? size - oft[fd].fileptr : nbytes;
+  nbytes = nbytes > (size - oft[fd].fileptr) ? (size - oft[fd].fileptr) : nbytes;
 
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
@@ -469,11 +469,10 @@ int fs_read(int fd, void *buf, int nbytes)
     nbytes -= remaining_count;
     offset = 0;
     buf += remaining_count;
-    remaining_count = nbytes > fsd.blocksz ? nbytes : fsd.blocksz;
-    oft[fd].fileptr += to_read;
-    return to_read;
+    remaining_count = nbytes > fsd.blocksz ? fsd.blocksz : nbytes;
   }
-  return SYSERR;
+  oft[fd].fileptr += to_read;
+  return to_read;
 }
 
 static int get_free_block()
@@ -498,79 +497,58 @@ int fs_write(int fd, void *buf, int nbytes)
   int size = oft[fd].in.size;
   int to_write = nbytes;
   int to_write_2 = nbytes;
+  int ptr = oft[fd].fileptr;
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
-  int available_blocks = (oft[fd].in.size + fsd.blocksz - 1) / fsd.blocksz;
-  int remaining_count = fsd.blocksz - offset;
-  bool8 free_block = TRUE;
-  int ret_val = 0;
-  int free_index = -1;
-  if (available_blocks < 0)
-  {
-    free_index = get_free_block();
-    if (free_index != -1)
-    {
-      oft[fd].in.blocks[block_index] = free_index;
-    }
-    else
-    {
-      free_block = FALSE;
-      ret_val = 0;
-    }
-  }
-  else
-  {
-    free_index = oft[fd].in.blocks[block_index];
-  }
-
+  int total = 0;
+  int buf_2 = (int)buf;
   while (to_write > 0)
   {
-    if (free_block)
+    if (block_index < INODEDIRECTBLOCKS)
     {
-      if (remaining_count > 0)
+
+      if (oft[fd].in.blocks[block_index] == -1)
       {
-        bs_bwrite(dev0, free_index, offset, buf, remaining_count);
+        oft[fd].in.size = oft[fd].in.size < ptr ? ptr : oft[fd].in.size;
+        oft[fd].fileptr = ptr;
+        _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
+          
+        return total;
+      }
+      else if (oft[fd].in.blocks[block_index] == 0)
+      {
+        oft[fd].in.blocks[block_index] = get_free_block();
+      }
+      fs_setmaskbit(oft[fd].in.blocks[block_index]);
+      int remaining_count = to_write > fsd.blocksz ? fsd.blocksz : to_write;
+      offset = (ptr % fsd.blocksz);
+      
+      remaining_count = (fsd.bloccksz - offset) < remaining_count ? (fsd.blocksz - offset) : remaining_count;
+      if (bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf_2, remaining_count) != OK)
+      {
+        if (ptr > oft[fd].in.size)
+        {
+          oft[fd].in.size = ptr;
+        }
+        oft[fd].fileptr = ptr;
+        _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
+        return total;
       }
 
       offset = 0;
+      total += remaining_count;
       to_write -= remaining_count;
-      buf += remaining_count;
-      remaining_count = fsd.blocksz >= to_write ? to_write : fsd.blocksz;
+      buf_2 += remaining_count;
+      ptr += remaining_count;
       block_index++;
-      if (to_write > 0)
-      {
-        if (block_index >= available_blocks)
-        {
-          free_index = get_free_block();
-          if (free_index != -1)
-          {
-            oft[fd].in.blocks[block_index] = free_index;
-          }
-          else
-          {
-            free_block = FALSE;
-            ret_val = to_write_2 - to_write;
-            break;
-          }
-        }
-        else
-        {
-          free_index = oft[fd].in.blocks[block_index];
-        }
-      }
     }
   }
 
-  if (!free_block)
-    to_write_2 = ret_val;
-  oft[fd].fileptr += to_write_2;
 
-  int fp = oft[fd].fileptr;
-  size = oft[fd].in.size;
-
-  oft[fd].in.size = size > fp ? size : fp;
-  _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
-  return to_write_2;
+  oft[fd].in.size = ptr > sz ? ptr : sz;
+  _fs_put_inode_by_num(dev0, oft[fd].in.id, &oft[fd].in);
+  oft[fd].fileptr = ptr;
+  return total;
 }
 
 int fs_link(char *src_filename, char *dst_filename)
