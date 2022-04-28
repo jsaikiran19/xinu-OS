@@ -48,8 +48,8 @@ const struct command run_commands[] = {
     //  stream_proc_tscdf},
     // {"tscdf_fq",
     //  stream_proc_future},
-    // {"fstest",
-    //  fs_test}
+    {"fstest",
+     fs_test}
      };
 
 int size = (int)sizeof(run_commands) / (int)sizeof(run_commands[0]);
