@@ -373,11 +373,12 @@ int fs_open(char *filename, int flags)
   for (int i = 0; i < n_entries; i++)
 
   {
-    if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
+    if (strcmp(fsd.root_dir.entry[i].name, filename) == 0)
     {
+      if(oft[i].state != FSTATE_OPEN && fsd.root_dir.entry[i].inode_num!=EMPTY){  // check if file is not open and inode not empty
       int num = fsd.root_dir.entry[i].inode_num;
       _fs_get_inode_by_num(0, num, &oft[i].in);
-      oft[i].state = FSTATE_OPEN;
+      oft[i].state = FSTATE_OPEN;  //changing state to open
       oft[i].fileptr = 0;
       oft[i].de = &fsd.root_dir.entry[i];
       oft[i].flag = flags;
@@ -407,7 +408,7 @@ int fs_create(char *filename, int mode)
 
   for (int i = 0; i < n_entries; i++)
   {
-    if (strcmp(fsd.root_dir.entry[i].name, filename) == 0)
+    if (strcmp(fsd.root_dir.entry[i].name, filename) == 0)  // returning error if filename alreadu exists
     {
       return SYSERR;
     }
@@ -429,9 +430,9 @@ int fs_create(char *filename, int mode)
   fsd.inodes_used++;
 
   _fs_put_inode_by_num(0, node.id, &node);
-  strcpy(fsd.root_dir.entry[n_entries].name, filename);
+  strcpy(fsd.root_dir.entry[n_entries].name, filename);   // copy filename to entry in fsd
   fsd.root_dir.entry[n_entries].inode_num = node.id;
-  fsd.root_dir.numentries++;
+  fsd.root_dir.numentries++;  // incrementing entries afeter creating file
   return fs_open(filename, O_RDWR);
 }
 
@@ -453,7 +454,7 @@ int fs_read(int fd, void *buf, int nbytes)
   {
     return SYSERR;
   }
-  nbytes = nbytes > (size - oft[fd].fileptr) ? (size - oft[fd].fileptr) : nbytes;
+  nbytes = nbytes > (size - oft[fd].fileptr) ? (size - oft[fd].fileptr) : nbytes;   // check if nbuytes if greater than remaining size
 
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
@@ -465,10 +466,10 @@ int fs_read(int fd, void *buf, int nbytes)
     {
       bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, remaining_count);
     }
-    block_index++;
-    nbytes -= remaining_count;
-    offset = 0;
-    buf += remaining_count;
+    block_index++;  // moving to next block
+    nbytes -= remaining_count; // reducing nbytes by remaining_count
+    offset = 0; // resetting offset because reading from next block
+    buf += remaining_count;   // incrementing buffer by remaining_count
     remaining_count = nbytes > fsd.blocksz ? fsd.blocksz : nbytes;
   }
   oft[fd].fileptr += to_read;
