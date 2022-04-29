@@ -428,7 +428,7 @@ int fs_create(char *filename, int mode)
   }
 
   inode_t node;
-  bool8 empty_inode = FALSE;
+  node.id = -1;
 
   //finding empty inode
   for (int i = 0; i < fsd.ninodes; i++)
@@ -437,12 +437,11 @@ int fs_create(char *filename, int mode)
     if (node.id == EMPTY)
     {
       node.id = i;
-      empty_inode = TRUE;
       break;
     }
   }
 
-  if (empty_inode == FALSE)
+  if (node.id == -1)
   {
     return SYSERR; // no empty inode
   }
@@ -462,7 +461,7 @@ int fs_create(char *filename, int mode)
       fsd.root_dir.entry[i].inode_num = node.id;
       strcpy(fsd.root_dir.entry[i].name, filename);
       fsd.root_dir.numentries++;
-      return fs_open(filename, O_WRONLY);
+      return fs_open(filename, O_RDWR);
     }
   }
   return SYSERR;
