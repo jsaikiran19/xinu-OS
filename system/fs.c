@@ -439,7 +439,7 @@ int fs_create(char *filename, int mode)
   fsd.inodes_used++;
 
   _fs_put_inode_by_num(0, node.id, &node);
-  for(int i=0;i<n_entries;i++){
+  for(int i=0;i<DIRECTORY_SIZE;i++){
     if(fsd.root_dir.entry[i].inode_num==EMPTY){
       fsd.root_dir.entry[i].inode_num = node.id;
       strcpy(fsd.root_dir.entry[i].name, filename);
