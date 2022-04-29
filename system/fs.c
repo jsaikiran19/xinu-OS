@@ -427,7 +427,7 @@ int fs_create(char *filename, int mode)
   node.device = 0;
   node.size = 0;
   fsd.inodes_used++;
-  memset(node.blocks, EMPTY, sizeof(node.blocks));
+  // memset(node.blocks, EMPTY, sizeof(node.blocks));
 
   _fs_put_inode_by_num(0, node.id, &node);
   strcpy(fsd.root_dir.entry[n_entries].name, filename);
