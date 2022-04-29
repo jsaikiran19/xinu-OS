@@ -47,7 +47,7 @@ const struct command run_commands[] = {
     {"tscdf",
      stream_proc_tscdf},
     {"tscdf_fq",
-     stream_proc_future}
+     stream_proc_future},
     {"fstest",
      fs_test}
      };
