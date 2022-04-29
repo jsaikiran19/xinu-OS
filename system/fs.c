@@ -442,8 +442,8 @@ int fs_create(char *filename, int mode)
   memset(node.blocks, EMPTY, sizeof(node.blocks));
 
   _fs_put_inode_by_num(0, node.id, &node);
-  fsd.root_dir.entry[n_entries].inode_num = node.id;
-  strcpy(fsd.root_dir.entry[n_entries].name, filename);
+  fsd.root_dir.entry[node.id].inode_num = node.id;
+  strcpy(fsd.root_dir.entry[node.id].name, filename);
   fsd.root_dir.numentries++;
   return fs_open(filename, O_WRONLY);
 }
