@@ -421,9 +421,10 @@ int fs_create(char *filename, int mode)
   }
 
   inode_t node;
-  _fs_get_inode_by_num(0, fsd.inodes_used, &node);
+  
 
-  for(int i=0;i<n_entries;i++) {
+  for(int i=0;i<fsd.ninodes;i++) {
+    _fs_get_inode_by_num(0, i, &node);
     if(fsd.root_dir.entry[i].inode_num==EMPTY) {
       node.id = i;
       break;
@@ -438,9 +439,13 @@ int fs_create(char *filename, int mode)
   fsd.inodes_used++;
 
   _fs_put_inode_by_num(0, node.id, &node);
-  strcpy(fsd.root_dir.entry[n_entries].name, filename);   // copy filename to entry in fsd
-  fsd.root_dir.entry[n_entries].inode_num = node.id;
-  fsd.root_dir.numentries++;  // incrementing entries afeter creating file
+  for(int i=0;i<n_entries;i++){
+    if(fsd.root_dir.entry[i].inode_num==EMPTY){
+      fsd.root_dir.entry[i].inode_num = node.id;
+      strcpy(fsd.root_dir.entry[i].name, filename);
+      fsd.root_dir.numentries++;  // incrementing entries afeter creating file
+    }
+  }
   return fs_open(filename, O_RDWR);
 }
 
