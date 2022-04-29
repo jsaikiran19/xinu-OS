@@ -434,7 +434,7 @@ int fs_create(char *filename, int mode)
   node.nlink = 1;
   node.device = 0;
   node.size = 0;
-  node.blocks = memset(node.blocks, EMPTY, sizeof(node.blocks));
+  memset(node.blocks, EMPTY, sizeof(node.blocks));
   fsd.inodes_used++;
 
   _fs_put_inode_by_num(0, node.id, &node);
