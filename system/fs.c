@@ -496,7 +496,6 @@ int fs_write(int fd, void *buf, int nbytes)
   }
   int size = oft[fd].in.size;
   int to_write = nbytes;
-  int to_write_2 = nbytes;
   int ptr = oft[fd].fileptr;
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
@@ -523,7 +522,7 @@ int fs_write(int fd, void *buf, int nbytes)
       int remaining_count = to_write > fsd.blocksz ? fsd.blocksz : to_write;
       offset = (ptr % fsd.blocksz);
       
-      remaining_count = (fsd.bloccksz - offset) < remaining_count ? (fsd.blocksz - offset) : remaining_count;
+      remaining_count = (fsd.blocksz - offset) < remaining_count ? (fsd.blocksz - offset) : remaining_count;
       if (bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf_2, remaining_count) != OK)
       {
         if (ptr > oft[fd].in.size)
@@ -545,8 +544,8 @@ int fs_write(int fd, void *buf, int nbytes)
   }
 
 
-  oft[fd].in.size = ptr > sz ? ptr : sz;
-  _fs_put_inode_by_num(dev0, oft[fd].in.id, &oft[fd].in);
+  oft[fd].in.size = ptr > size ? ptr : size;
+  _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
   oft[fd].fileptr = ptr;
   return total;
 }
