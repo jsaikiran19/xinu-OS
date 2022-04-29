@@ -385,7 +385,8 @@ int fs_open(char *filename, int flags)
       return i;
     }
   }
-  return SYSERR;
+  }
+return SYSERR;
 }
 
 int fs_close(int fd)
@@ -422,11 +423,18 @@ int fs_create(char *filename, int mode)
   inode_t node;
   _fs_get_inode_by_num(0, fsd.inodes_used, &node);
 
-  node.id = fsd.inodes_used;
+  for(int i=0;i<n_entries;i++) {
+    if(fsd.root_dir.entry[i].inode_num==EMPTY) {
+      node.id = i;
+      break;
+    }
+  }
+
   node.type = INODE_TYPE_FILE;
   node.nlink = 1;
   node.device = 0;
   node.size = 0;
+  node.blocks = memset(node.blocks, EMPTY, sizeof(node.blocks));
   fsd.inodes_used++;
 
   _fs_put_inode_by_num(0, node.id, &node);
@@ -460,6 +468,7 @@ int fs_read(int fd, void *buf, int nbytes)
   int offset = oft[fd].fileptr % fsd.blocksz;
   int remaining_count = fsd.blocksz - offset;
   int to_read = nbytes;
+
   while (nbytes > 0)
   {
     if (remaining_count > 0)
@@ -502,12 +511,14 @@ int fs_write(int fd, void *buf, int nbytes)
   int offset = oft[fd].fileptr % fsd.blocksz;
   int total = 0;
   int buf_2 = (int)buf;
+
+
   while (to_write > 0)
   {
     if (block_index < INODEDIRECTBLOCKS)
     {
 
-      if (oft[fd].in.blocks[block_index] == -1)
+      if (oft[fd].in.blocks[block_index] == EMPTY)
       {
         oft[fd].in.size = oft[fd].in.size < ptr ? ptr : oft[fd].in.size;
         oft[fd].fileptr = ptr;
@@ -519,7 +530,10 @@ int fs_write(int fd, void *buf, int nbytes)
       {
         oft[fd].in.blocks[block_index] = get_free_block();
       }
+
+
       fs_setmaskbit(oft[fd].in.blocks[block_index]);
+
       int remaining_count = to_write > fsd.blocksz ? fsd.blocksz : to_write;
       offset = (ptr % fsd.blocksz);
       
@@ -536,10 +550,10 @@ int fs_write(int fd, void *buf, int nbytes)
       }
 
       offset = 0;
-      total += remaining_count;
-      to_write -= remaining_count;
       buf_2 += remaining_count;
       ptr += remaining_count;
+      total += remaining_count;
+      to_write -= remaining_count;
       block_index++;
     }
   }
