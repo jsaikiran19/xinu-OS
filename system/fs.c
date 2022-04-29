@@ -433,17 +433,21 @@ int fs_create(char *filename, int mode)
   memset(node.blocks, EMPTY, sizeof(node.blocks));
 
   _fs_put_inode_by_num(0, node.id, &node);
-  for (int i = 0; i < DIRECTORY_SIZE; i++)
-  {
-    if (fsd.root_dir.entry[i].inode_num == EMPTY)
-    {
-      fsd.root_dir.entry[i].inode_num = node.id;
-      strcpy(fsd.root_dir.entry[i].name, filename);
-      fsd.root_dir.numentries++; //incrementing number of entries afer creating file;
-      return fs_open(filename, O_RDWR);
-    }
-  }
-  return SYSERR;
+  // for (int i = 0; i < DIRECTORY_SIZE; i++)
+  // {
+  //   if (fsd.root_dir.entry[i].inode_num == EMPTY)
+  //   {
+  //     fsd.root_dir.entry[i].inode_num = node.id;
+  //     strcpy(fsd.root_dir.entry[i].name, filename);
+  //     fsd.root_dir.numentries++; //incrementing number of entries afer creating file;
+  //     return fs_open(filename, O_RDWR);
+  //   }
+  // }
+  strcpy(fsd.root_dir.entry[n_entries].name, filename);
+  fsd.root_dir.entry[n_entries].inode_num = node.id;
+  fsd.root_dir.numentries++;
+  return fs_open(filename, O_RDWR);
+  // return SYSERR;
 }
 
 int fs_seek(int fd, int offset)
