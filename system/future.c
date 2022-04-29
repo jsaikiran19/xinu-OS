@@ -52,13 +52,13 @@ syscall future_set(future_t *future, char *data)
   mask = disable();
    if (future->mode == FUTURE_QUEUE)
   {
-    if (future->count == future->max_elems)
-    {
-      enqueue(getpid(), future->set_queue);
-      suspend(getpid());
-    }
     qid16 q = future->get_queue;
     qid16 q2 = future->set_queue;
+    if (future->count == future->max_elems)
+    {
+      enqueue(getpid(), q2);
+      suspend(getpid());
+    }
     char *tailelemptr = future->data + (future->tail * future->size);
     memcpy(tailelemptr, data, future->size);
     future->tail+=1;
@@ -67,7 +67,7 @@ syscall future_set(future_t *future, char *data)
 
     if (!isempty(q))
     {
-      resume(dequeue(q2));
+      resume(dequeue(q));
     }
 
     restore(mask);
@@ -100,6 +100,7 @@ syscall future_get(future_t *future, char *data)
    if (future->mode == FUTURE_QUEUE)
   {
     qid16 q = future->get_queue;
+    qid16 q2 = future->set_queue;
     if (future->count == 0)
     {
       pid32 pid = getpid();
@@ -113,7 +114,7 @@ syscall future_get(future_t *future, char *data)
     future->head%=future->max_elems;
     future->count--;
 
-    qid16 q2 = future->set_queue;
+    
     if (!isempty(q2))
     {
       resume(dequeue(q2));
