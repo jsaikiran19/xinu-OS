@@ -6,7 +6,7 @@
 
 uint pcport;
 void stream_consumer(int32 id, struct stream *str);
-int q_len, time_intv, out_time;
+int queue_length, time_intv, out_time;
 int32 stream_proc(int nargs, char *args[])
 {
     ulong secs, msecs, time;
@@ -58,46 +58,46 @@ int32 stream_proc(int nargs, char *args[])
             i -= 2;
         }
     }
-
-    if ((pcport = ptcreate(num_streams)) == SYSERR)
+    pcport = ptcreate(num_streams);
+    if (pcport == SYSERR)
     {
         printf("ptcreate failed\n");
         return (-1);
     }
-    //streams creation
-    struct stream **strm;
-    q_len = work_queue_depth;
+    struct stream **strm = (struct stream **)getmem(num_streams * sizeof(struct stream *));
+    queue_length = work_queue_depth;
     time_intv = time_window;
     out_time = output_time;
 
-    if ((strm = (struct stream **)getmem(sizeof(struct stream *) * (num_streams))) == (struct stream **)SYSERR)
+    if (strm == SYSERR)
     {
         printf("ERROR: GETMEM FAILED\n");
     }
-
-    //initializing stream
-    for (int i = 0; i < num_streams; i++)
+    int i = 0;
+    while (i < num_streams)
     {
-        if ((strm[i] = (struct stream *)getmem(sizeof(struct stream) + (sizeof(de) * work_queue_depth))) == (struct stream *)SYSERR)
+        strm[i] = (struct stream *)getmem(sizeof(struct stream) + (sizeof(de) * work_queue_depth));
+        if ((strm[i]  == SYSERR))
         {
             printf("ALLOCATION ERROR");
             return;
         }
-        strm[i]->items = semcreate(work_queue_depth);
         strm[i]->mutex = semcreate(1);
+        strm[i]->items = semcreate(work_queue_depth);
         strm[i]->spaces = semcreate(0);
         strm[i]->head = 0;
-        strm[i]->tail = 0;
         strm[i]->queue = sizeof(struct stream) + (char *)strm[i];
+        i++;
     }
-    //consumer process spawned
+
     for (int j = 0; j < num_streams; j++)
     {
         resume(create((void *)stream_consumer, 4096, 20, "stream_consumer", 2, j, strm[j]));
     }
-    for (int i = 0; i < n_input; i++)
+    i = 0;
+    while (i < n_input)
     {
-        //input parsing
+        
         a = (char *)stream_input[i];
         st = atoi(a);
         while (*a++ != '\t')
@@ -109,18 +109,20 @@ int32 stream_proc(int nargs, char *args[])
         wait(strm[st]->items);
         wait(strm[st]->mutex);
         head = strm[st]->head;
-        strm[st]->queue[head].time = ts;
+
         strm[st]->queue[head].value = v;
+        strm[st]->queue[head].time = ts;
+        
         head = ++head % work_queue_depth;
         strm[st]->head = head;
         signal(strm[st]->mutex);
         signal(strm[st]->spaces);
+        i++;
     }
 
     for (int i = 0; i < num_streams; i++)
     {
-        uint32 pm;
-        pm = ptrecv(pcport);
+        uint32 pm = ptrecv(pcport);
         printf("process %d exited\n", pm);
     }
 
@@ -134,39 +136,38 @@ int32 stream_proc(int nargs, char *args[])
 
 void stream_consumer(int32 id, struct stream *str)
 {
-    int tail, res = 0;
-    struct tscdf *tc;
-    pid32 proc_id = getpid();
-    kprintf("stream_consumer id:%d (pid:%d)\n", id, proc_id);
-    tc = tscdf_init(time_intv);
+    int tail, result = 0;
+    struct tscdf *tc = tscdf_init(time_intv);
+    pid32 pid = getpid();
+    kprintf("stream_consumer id:%d (pid:%d)\n", id, pid);
     while (1)
     {
         wait(str->spaces);
         wait(str->mutex);
         tail = str->tail;
-        if (str->queue[str->tail].time == 0 && str->queue[str->tail].value == 0)
+        if ( str->queue[str->tail].value == 0 && str->queue[str->tail].time == 0 )
         {
             kprintf("stream_consumer exiting\n");
             break;
         }
         tscdf_update(tc, str->queue[tail].time, str->queue[tail].value);
 
-        if (res++ == (out_time - 1))
+        if (result++ == (out_time - 1))
         {
             char output[10];
-            int *qarray;
-            qarray = tscdf_quartiles(tc);
+            int *qarray = tscdf_quartiles(tc);
             if (qarray == NULL)
             {
                 kprintf("tscdf_quartiles returned NULL\n");
                 continue;
             }
             sprintf(output, "s%d: %d %d %d %d %d \n", id, qarray[0], qarray[1], qarray[2], qarray[3], qarray[4]);
-            kprintf("%s", output);
             freemem((char *)qarray, (6 * sizeof(int32)));
-            res = 0;
+            kprintf("%s", output);
+            result = 0;
         }
-        tail = (++tail) % q_len;
+        ++tail;
+        tail = tail % queue_length;
 
         str->tail = tail;
         signal(str->mutex);
