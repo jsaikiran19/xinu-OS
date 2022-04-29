@@ -386,7 +386,7 @@ int fs_open(char *filename, int flags)
     }
   }
   }
-return SYSERR;
+  return SYSERR;
 }
 
 int fs_close(int fd)
@@ -421,29 +421,20 @@ int fs_create(char *filename, int mode)
   }
 
   inode_t node;
-  
-  int i;
-  for(i=0;i<DIRECTORY_SIZE;i++) {
-    _fs_get_inode_by_num(0, i, &node);
-    if(fsd.root_dir.entry[i].inode_num==EMPTY) {
-      node.id = i;
-      break;
-    }
-  }
+  _fs_get_inode_by_num(0, fsd.inodes_used, &node);
 
+  node.id = fsd.inodes_used;
   node.type = INODE_TYPE_FILE;
   node.nlink = 1;
   node.device = 0;
   node.size = 0;
-  memset(node.blocks, EMPTY, sizeof(node.blocks));
   fsd.inodes_used++;
 
   _fs_put_inode_by_num(0, node.id, &node);
-  fsd.root_dir.entry[i].inode_num = node.id;
-  strcpy(fsd.root_dir.entry[i].name, filename);
-  fsd.root_dir.numentries++; //incrementing entries afeter creating file
+  strcpy(fsd.root_dir.entry[n_entries].name, filename);
+  fsd.root_dir.entry[n_entries].inode_num = node.id;
+  fsd.root_dir.numentries++;
   return fs_open(filename, O_RDWR);
-  
 }
 
 int fs_seek(int fd, int offset)
@@ -459,7 +450,7 @@ int fs_seek(int fd, int offset)
 
 int fs_read(int fd, void *buf, int nbytes)
 {
-  int size = oft[fd].in.size;
+ int size = oft[fd].in.size;
   if (isbadfd(fd) || oft[fd].state == FSTATE_CLOSED || oft[fd].flag != O_RDONLY)
   {
     return SYSERR;
