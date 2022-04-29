@@ -149,7 +149,7 @@ void stream_consumer_future(int32 id, future_t *f)
             output = "";
             qarray = tscdf_quartiles(tc);
 
-            if (!qarray)
+            if (qarray==NULL)
             {
                 kprintf("tscdf_quartiles returned NULL\n");
                 continue;

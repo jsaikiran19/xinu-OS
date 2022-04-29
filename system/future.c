@@ -83,7 +83,6 @@ syscall future_set(future_t *future, char *data)
   {
     memcpy(future->data, data, sizeof(data));
     future->state = future->mode == FUTURE_EXCLUSIVE ? FUTURE_EMPTY : FUTURE_READY;
-    // resume(future->pid);
     qid16 q = future->get_queue;
     while (!isempty(q))
     {
@@ -105,6 +104,7 @@ syscall future_get(future_t *future, char *data)
     {
       pid32 pid = getpid();
       enqueue(pid, q);
+      suspend(pid);
     }
 
     char *headelemptr = future->data + (future->head * future->size);
