@@ -373,15 +373,18 @@ int fs_open(char *filename, int flags)
   for (int i = 0; i < n_entries; i++)
 
   {
-    if (oft[i].state != FSTATE_OPEN && strcmp(fsd.root_dir.entry[i].name, filename) == 0)
+    if (strcmp(fsd.root_dir.entry[i].name, filename) == 0)
     {
-      int num = fsd.root_dir.entry[i].inode_num;
-      _fs_get_inode_by_num(0, num, &oft[i].in);
-      oft[i].state = FSTATE_OPEN;
-      oft[i].fileptr = 0;
-      oft[i].de = &fsd.root_dir.entry[i];
-      oft[i].flag = flags;
-      return i;
+      if (oft[i].state != FSTATE_OPEN && fsd.root_dir.entry[i].inode_num != EMPTY)
+      {
+        int num = fsd.root_dir.entry[i].inode_num;
+        _fs_get_inode_by_num(0, num, &oft[i].in);
+        oft[i].state = FSTATE_OPEN;  //changing state to open
+        oft[i].fileptr = 0;
+        oft[i].de = &fsd.root_dir.entry[i];
+        oft[i].flag = flags;
+        return i;
+      }
     }
   }
   return SYSERR;
@@ -403,7 +406,9 @@ int fs_create(char *filename, int mode)
 
   int n_entries = fsd.root_dir.numentries;
   if (n_entries >= DIRECTORY_SIZE)
+  {
     return SYSERR;
+  }
 
   for (int i = 0; i < n_entries; i++)
   {
@@ -419,21 +424,28 @@ int fs_create(char *filename, int mode)
   }
 
   inode_t node;
-  _fs_get_inode_by_num(0, fsd.inodes_used, &node);
+  for (int i = 0; i < fsd.ninodes; i++)
+  {
+    _fs_get_inode_by_num(0, i, &node);
+    if (fsd.root_dir.entry[i].inode_num == EMPTY)
+    {
+      node.id = i;
+      break;
+    }
+  }
 
-  node.id = fsd.inodes_used;
   node.type = INODE_TYPE_FILE;
   node.nlink = 1;
   node.device = 0;
   node.size = 0;
   fsd.inodes_used++;
-  // memset(node.blocks, EMPTY, sizeof(node.blocks));
+  memset(node.blocks, EMPTY, sizeof(node.blocks));
 
   _fs_put_inode_by_num(0, node.id, &node);
-  strcpy(fsd.root_dir.entry[n_entries].name, filename);
   fsd.root_dir.entry[n_entries].inode_num = node.id;
+  strcpy(fsd.root_dir.entry[n_entries].name, filename);
   fsd.root_dir.numentries++;
-  return fs_open(filename, O_RDWR);
+  return fs_open(filename, O_WRONLY);
 }
 
 int fs_seek(int fd, int offset)
