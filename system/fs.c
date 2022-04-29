@@ -439,43 +439,43 @@ int fs_create(char *filename, int mode)
 
 int fs_seek(int fd, int offset)
 {
-  int size = oft[fd].in.size;
-  if (isbadfd(fd) || offset > size || offset < 0 || oft[fd].state == FSTATE_CLOSED)
-  {
-    return SYSERR;
-  }
-  oft[fd].fileptr = offset;
-  return OK;
+  // int size = oft[fd].in.size;
+  // if (isbadfd(fd) || offset > size || offset < 0 || oft[fd].state == FSTATE_CLOSED)
+  // {
+  //   return SYSERR;
+  // }
+  // oft[fd].fileptr = offset;
+  return SYSERR;
 }
 
 int fs_read(int fd, void *buf, int nbytes)
 {
- int size = oft[fd].in.size;
-  if (isbadfd(fd) || oft[fd].state == FSTATE_CLOSED || oft[fd].flag != O_RDONLY)
-  {
-    return SYSERR;
-  }
-  nbytes = nbytes > (size - oft[fd].fileptr) ? (size - oft[fd].fileptr) : nbytes;   // check if nbuytes if greater than remaining size
+//  int size = oft[fd].in.size;
+//   if (isbadfd(fd) || oft[fd].state == FSTATE_CLOSED || oft[fd].flag != O_RDONLY)
+//   {
+//     return SYSERR;
+//   }
+//   nbytes = nbytes > (size - oft[fd].fileptr) ? (size - oft[fd].fileptr) : nbytes;   // check if nbuytes if greater than remaining size
 
-  int block_index = oft[fd].fileptr / fsd.blocksz;
-  int offset = oft[fd].fileptr % fsd.blocksz;
-  int remaining_count = fsd.blocksz - offset;
-  int to_read = nbytes;
+//   int block_index = oft[fd].fileptr / fsd.blocksz;
+//   int offset = oft[fd].fileptr % fsd.blocksz;
+//   int remaining_count = fsd.blocksz - offset;
+//   int to_read = nbytes;
 
-  while (nbytes > 0)
-  {
-    if (remaining_count > 0)
-    {
-      bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, remaining_count);
-    }
-    block_index++;  // moving to next block
-    nbytes -= remaining_count; // reducing nbytes by remaining_count
-    offset = 0; // resetting offset because reading from next block
-    buf += remaining_count;   // incrementing buffer by remaining_count
-    remaining_count = nbytes > fsd.blocksz ? fsd.blocksz : nbytes;
-  }
-  oft[fd].fileptr += to_read;
-  return to_read;
+//   while (nbytes > 0)
+//   {
+//     if (remaining_count > 0)
+//     {
+//       bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, remaining_count);
+//     }
+//     block_index++;  // moving to next block
+//     nbytes -= remaining_count; // reducing nbytes by remaining_count
+//     offset = 0; // resetting offset because reading from next block
+//     buf += remaining_count;   // incrementing buffer by remaining_count
+//     remaining_count = nbytes > fsd.blocksz ? fsd.blocksz : nbytes;
+//   }
+//   oft[fd].fileptr += to_read;
+  return SYSERR;
 }
 
 static int get_free_block()
@@ -493,69 +493,69 @@ static int get_free_block()
 
 int fs_write(int fd, void *buf, int nbytes)
 {
-  if (isbadfd(fd) || oft[fd].flag == O_RDONLY || oft[fd].state == FSTATE_CLOSED)
-  {
-    return SYSERR;
-  }
-  int size = oft[fd].in.size;
-  int to_write = nbytes;
-  int ptr = oft[fd].fileptr;
-  int block_index = oft[fd].fileptr / fsd.blocksz;
-  int offset = oft[fd].fileptr % fsd.blocksz;
-  int total = 0;
-  int buf_2 = (int)buf;
+  // if (isbadfd(fd) || oft[fd].flag == O_RDONLY || oft[fd].state == FSTATE_CLOSED)
+  // {
+  //   return SYSERR;
+  // }
+  // int size = oft[fd].in.size;
+  // int to_write = nbytes;
+  // int ptr = oft[fd].fileptr;
+  // int block_index = oft[fd].fileptr / fsd.blocksz;
+  // int offset = oft[fd].fileptr % fsd.blocksz;
+  // int total = 0;
+  // int buf_2 = (int)buf;
 
 
-  while (to_write > 0)
-  {
-    if (block_index < INODEDIRECTBLOCKS)
-    {
+  // while (to_write > 0)
+  // {
+  //   if (block_index < INODEDIRECTBLOCKS)
+  //   {
 
-      if (oft[fd].in.blocks[block_index] == EMPTY)
-      {
-        oft[fd].in.size = oft[fd].in.size < ptr ? ptr : oft[fd].in.size;
-        oft[fd].fileptr = ptr;
-        _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
+  //     if (oft[fd].in.blocks[block_index] == EMPTY)
+  //     {
+  //       oft[fd].in.size = oft[fd].in.size < ptr ? ptr : oft[fd].in.size;
+  //       oft[fd].fileptr = ptr;
+  //       _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
           
-        return total;
-      }
-      else if (oft[fd].in.blocks[block_index] == 0)
-      {
-        oft[fd].in.blocks[block_index] = get_free_block();
-      }
+  //       return total;
+  //     }
+  //     else if (oft[fd].in.blocks[block_index] == 0)
+  //     {
+  //       oft[fd].in.blocks[block_index] = get_free_block();
+  //     }
 
 
-      fs_setmaskbit(oft[fd].in.blocks[block_index]);
+  //     fs_setmaskbit(oft[fd].in.blocks[block_index]);
 
-      int remaining_count = to_write > fsd.blocksz ? fsd.blocksz : to_write;
-      offset = (ptr % fsd.blocksz);
+  //     int remaining_count = to_write > fsd.blocksz ? fsd.blocksz : to_write;
+  //     offset = (ptr % fsd.blocksz);
       
-      remaining_count = (fsd.blocksz - offset) < remaining_count ? (fsd.blocksz - offset) : remaining_count;
-      if (bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf_2, remaining_count) != OK)
-      {
-        if (ptr > oft[fd].in.size)
-        {
-          oft[fd].in.size = ptr;
-        }
-        oft[fd].fileptr = ptr;
-        _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
-        return total;
-      }
+  //     remaining_count = (fsd.blocksz - offset) < remaining_count ? (fsd.blocksz - offset) : remaining_count;
+  //     if (bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf_2, remaining_count) != OK)
+  //     {
+  //       if (ptr > oft[fd].in.size)
+  //       {
+  //         oft[fd].in.size = ptr;
+  //       }
+  //       oft[fd].fileptr = ptr;
+  //       _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
+  //       return total;
+  //     }
 
-      offset = 0;
-      buf_2 += remaining_count;
-      ptr += remaining_count;
-      total += remaining_count;
-      to_write -= remaining_count;
-      block_index++;
-    }
-  }
+  //     offset = 0;
+  //     buf_2 += remaining_count;
+  //     ptr += remaining_count;
+  //     total += remaining_count;
+  //     to_write -= remaining_count;
+  //     block_index++;
+  //   }
+  // }
 
 
-  oft[fd].in.size = ptr > size ? ptr : size;
-  _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
-  oft[fd].fileptr = ptr;
-  return total;
+  // oft[fd].in.size = ptr > size ? ptr : size;
+  // _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
+  // oft[fd].fileptr = ptr;
+  return SYSERR;
 }
 
 int fs_link(char *src_filename, char *dst_filename)
