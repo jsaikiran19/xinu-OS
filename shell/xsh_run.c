@@ -46,8 +46,8 @@ const struct command run_commands[] = {
      prodcons_bb},
     {"tscdf",
      stream_proc_tscdf},
-    // {"tscdf_fq",
-    //  stream_proc_future},
+    {"tscdf_fq",
+     stream_proc_future}
     // {"fstest",
     //  fs_test}
      };
@@ -207,6 +207,7 @@ void future_prodcons(int nargs, char *args[])
             return;
         }
         resume(create(future_free_test, 2048, 20, "free", 2, nargs, args));
+        return;
     }
     int i = 2;
     if (strcmp(args[1], "-pc") == 0)
@@ -249,7 +250,6 @@ void future_prodcons(int nargs, char *args[])
         if (check_number(args[2]) != 0)
         {
             printf(errorMsg);
-            //   signal(exit_process);
             return;
         }
         future_fib(nargs, args);
@@ -265,12 +265,12 @@ void future_prodcons(int nargs, char *args[])
         int i = 3;
         while (i < nargs)
         {
-            if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && check_number(args[i]) != 1)
+            if (strcmp(args[i], "g") != 0 && strcmp(args[i], "s") != 0 && check_number(args[i]) == -1)
             {
                 printf(errorMsg);
                 return;
             }
-            if (strcmp(args[i], "s") == 0 && check_number(args[i + 1]) != 1)
+            if (strcmp(args[i], "s") == 0 && check_number(args[i + 1]) == -1)
             {
                 printf(errorMsg);
                 return;
@@ -283,25 +283,13 @@ void future_prodcons(int nargs, char *args[])
             i++;
         }
     }
-    else
-    {
-        if (nargs != 2)
-        {
-            printf(errorMsg);
-            return;
-        }
-        future_free_test(nargs, args);
-        return;
-    }
     print_sem = semcreate(1);
     future_t *future_exclusive;
-    future_exclusive = future_alloc(strcmp(args[1], "-pcq") == 0 ? FUTURE_QUEUE : FUTURE_EXCLUSIVE, sizeof(int), 1);
     if (strcmp(args[1], "-pcq") == 0)
     {
         if (check_number(args[2]) != 1)
         {
             printf(errorMsg);
-            //   signal(exit_process);
             return;
         }
         future_exclusive = future_alloc(FUTURE_QUEUE, sizeof(int), atoi(args[2]));

@@ -59,27 +59,22 @@ int stream_proc_futures(int nargs, char *args[])
             i -= 2;
         }
     }
-
-    if ((port = ptcreate(num_streams)) == SYSERR)
+    port = ptcreate(num_streams);
+    if (port == SYSERR)
     {
         printf("Error: Port Creation\n");
         signal(can_exit);
         return -1;
     }
 
-    // TODO: Create futures
     future_t **futures = (struct future_t **)getmem(num_streams * sizeof(future_t));
-    ;
 
-    // TODO: Allocate futures and create consumer processes
-    // Use `i` as the stream id.
     for (int i = 0; i < num_streams; i++)
     {
         futures[i] = future_alloc(FUTURE_QUEUE, sizeof(de), work_queue_depth);
         resume(create((void *)stream_consumer_future, 2048, 20, "stream_consumer_future", 2, i, futures[i]));
     }
 
-    // TODO: Parse input header file data and populate work queue
     for (int i = 0; i < n_input; i++)
     {
         char *a = (char *)stream_input[i];
@@ -91,15 +86,14 @@ int stream_proc_futures(int nargs, char *args[])
             ;
         int v = atoi(a);
 
-        de *prod;
-        prod = (de *)getmem(sizeof(de));
-        prod->time = ts;
-        prod->value = v;
+        de *pd = (de *)getmem(sizeof(de));
+        pd->time = ts;
+        pd->value = v;
 
-        future_set(futures[st], prod);
+        future_set(futures[st], pd);
     }
 
-    // TODO: Join all launched consumer processes
+    
     for (i = 0; i < num_streams; i++)
     {
         uint32 pm = ptrecv(port);
@@ -108,7 +102,7 @@ int stream_proc_futures(int nargs, char *args[])
 
     ptdelete(port, 0);
 
-    // TODO: Free all futures
+
     for (int i = 0; i < num_streams; i++)
     {
         future_free(futures[i]);
@@ -124,38 +118,38 @@ int stream_proc_futures(int nargs, char *args[])
 void stream_consumer_future(int32 id, future_t *f)
 {
     kprintf("stream_consumer_future id:%d (pid:%d)\n", id, getpid());
-    // TODO: Consume all values from the work queue of the corresponding stream
-
+    
     struct tscdf *tc = tscdf_init(time_window);
-    int count = 0;
+    int c = 0;
     char *output;
     int *qarray = (int32 *)getmem(6 * sizeof(int32));
 
-    while (1)
+    while (TRUE)
     {
         de* qElement;
         future_get(f, qElement);
 
         int update = tscdf_update(tc, qElement->time, qElement->value);
 
-        if (qElement->time == 0)
-        {
-            break;
-        }
-        count++;
-
         if (update == SYSERR)
         {
             return SYSERR;
         }
 
-        if (count == output_time)
+        else if (qElement->time == 0)
         {
-            count = 0;
+            break;
+        }
+        c++;
+
+
+        if (c == output_time)
+        {
+            c = 0;
             output = "";
             qarray = tscdf_quartiles(tc);
 
-            if (qarray == NULL)
+            if (!qarray)
             {
                 kprintf("tscdf_quartiles returned NULL\n");
                 continue;
@@ -170,6 +164,7 @@ void stream_consumer_future(int32 id, future_t *f)
     tscdf_free(tc);
     future_free(f);
     kprintf("stream_consumer_future exiting\n");
-    ptsend(port, getpid());
+    pid32 pid = getpid();
+    ptsend(port, pid);
     return;
 }

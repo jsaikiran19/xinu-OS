@@ -3,63 +3,149 @@
 
 future_t *future_alloc(future_mode_t mode, uint size, uint nelem)
 {
+  intmask mask;
+  mask = disable();
+  future_t *future;
 
-  int mask = disable();
-  future_t *future = (future_t *)getmem((size) + sizeof(future_t));
+  future = (future_t *)getmem((size * nelem) + sizeof(future_t));
   future->data = sizeof(future_t) + (char *)future;
   future->mode = mode;
+  future->size = size;
   future->state = FUTURE_EMPTY;
+  future->get_queue = newqueue();
+  future->set_queue = newqueue();
+  future->max_elems = nelem;
+  future->count = 0;
+  future->head = 0;
+  future->tail = 0;
   restore(mask);
+
   return future;
 }
 
+// TODO: write your code here for future_free, future_get and future_set
+
 syscall future_free(future_t *future)
 {
-  int mask = disable();
+  intmask mask;
+  mask = disable();
   restore(mask);
+  qid16 q = future->get_queue;
+  qid16 q2 = future->set_queue;
+  while (!isempty(q))
+  {
+    pid32 pid = dequeue(q);
+    kill(pid);
+  }
+  while (!isempty(q2))
+  {
+    pid32 pid = dequeue(q2);
+    kill(pid);
+  }
   return freemem((char *)future, sizeof(future_t) + future->size);
 }
 
 syscall future_set(future_t *future, char *data)
 {
-  int mask = disable();
 
+  intmask mask;
+  mask = disable();
+   if (future->mode == FUTURE_QUEUE)
+  {
+    if (future->count == future->max_elems)
+    {
+      enqueue(getpid(), future->set_queue);
+      suspend(getpid());
+    }
+    qid16 q = future->get_queue;
+    qid16 q2 = future->set_queue;
+    char *tailelemptr = future->data + (future->tail * future->size);
+    memcpy(tailelemptr, data, future->size);
+    future->tail+=1;
+    future->tail%=future->max_elems;
+    future->count++;
+
+    if (!isempty(q))
+    {
+      resume(dequeue(q2));
+    }
+
+    restore(mask);
+    return OK;
+  }
   if (future->state == FUTURE_EMPTY)
   {
-    
-    memcpy(future->data, data, sizeof(data));
     future->state = FUTURE_READY;
+    memcpy(future->data, data, sizeof(data));
     return OK;
   }
-
-  if (future->state == FUTURE_WAITING)
+  else if (future->state == FUTURE_WAITING)
   {
     memcpy(future->data, data, sizeof(data));
-    resume(future->pid);
-    future->state = FUTURE_EMPTY;
+    future->state = future->mode == FUTURE_EXCLUSIVE ? FUTURE_EMPTY : FUTURE_READY;
+    // resume(future->pid);
+    qid16 q = future->get_queue;
+    while (!isempty(q))
+    {
+      resume(dequeue(q));
+    }
     return OK;
   }
-  restore(mask);
   return SYSERR;
+  restore(mask);
 }
 syscall future_get(future_t *future, char *data)
 {
+  intmask mask;
+  mask = disable();
+   if (future->mode == FUTURE_QUEUE)
+  {
+    qid16 q = future->get_queue;
+    if (future->count == 0)
+    {
+      pid32 pid = getpid();
+      enqueue(pid, q);
+    }
 
-  int mask = disable();
+    char *headelemptr = future->data + (future->head * future->size);
+    memcpy(data, headelemptr, future->size);
+    future->head +=1;
+    future->head%=future->max_elems;
+    future->count--;
+
+    qid16 q2 = future->set_queue;
+    if (!isempty(q2))
+    {
+      resume(dequeue(q2));
+    }
+
+    restore(mask);
+    return OK;
+  }
   if (future->state == FUTURE_EMPTY)
   {
     future->state = FUTURE_WAITING;
     future->pid = getpid();
     suspend(future->pid);
+    enqueue(future->pid, future->get_queue);
     memcpy(data, future->data, sizeof(future->data));
     return OK;
   }
-  if (future->state == FUTURE_READY)
+  else if (future->state == FUTURE_READY)
   {
     memcpy(data, future->data, sizeof(data));
-    future->state = FUTURE_EMPTY;
+    future->state = future->mode == FUTURE_EXCLUSIVE ? FUTURE_EMPTY : FUTURE_READY;
     return OK;
   }
-  restore(mask);
+
+  else if (future->mode == FUTURE_SHARED)
+  {
+    pid32 pid = getpid();
+    suspend(pid);
+    enqueue(pid, future->get_queue);
+    return OK;
+  }
+
   return SYSERR;
+  restore(mask);
 }
