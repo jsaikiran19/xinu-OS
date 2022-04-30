@@ -585,6 +585,13 @@ int fs_link(char *src_filename, char *dst_filename)
     return SYSERR;
   }
 
+  for(int i=0;i<n_entries;i++) {
+    if(strcmp(fsd.root_dir.entry[i].name,dst_filename)==0)
+    {
+      return SYSERR;
+    }
+  }
+
   inode_t node;
   int n_entries = fsd.root_dir.numentries;
   for (int i = 0; i < n_entries; i++)
