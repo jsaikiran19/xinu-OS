@@ -587,13 +587,17 @@ int fs_link(char *src_filename, char *dst_filename)
 
   inode_t node;
   int n_entries = fsd.root_dir.numentries;
-  int inode_num = -1;
+   = -1;
   for (int i = 0; i < n_entries; i++)
   {
     
-    if (strcmp(fsd.root_dir.entry[i].name, src_filename) == 0 && inode_num != EMPTY)
+    if (strcmp(fsd.root_dir.entry[i].name, src_filename) == 0)
     {
-      inode_num = fsd.root_dir.entry[i].inode_num;
+      int inode_num = fsd.root_dir.entry[i].inode_num;
+      if(inode_num == EMPTY)
+      {
+        return SYSERR;
+      }
       strcpy(fsd.root_dir.entry[n_entries].name, dst_filename);
       fsd.root_dir.entry[n_entries].inode_num = inode_num;
       fsd.root_dir.numentries++;
@@ -602,10 +606,6 @@ int fs_link(char *src_filename, char *dst_filename)
       _fs_put_inode_by_num(0, inode_num, &node);
       break;
     }
-  }
-  if(inode_num == -1)
-  {
-    return SYSERR;
   }
   // for(int i=0;i<n_entries;i++)
   // {
