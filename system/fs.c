@@ -419,7 +419,7 @@ int fs_create(char *filename, int mode)
     return SYSERR;
   }
 
-  for (int i = 0; i < n_entries; i++)
+  for (int i = 0; i < DIRECTORY_SIZE; i++)
   {
     if (strcmp(fsd.root_dir.entry[i].name, filename) == 0) // returning error if filename alreadu exists
     {
@@ -555,7 +555,7 @@ int fs_write(int fd, void *buf, int nbytes)
   {
     if (oft[fd].in.size <= oft[fd].fileptr)
     {
-      for (int j = 0; j < oft[fd].in.blocks; j++)
+      for (int j = 0; j < INODEDIRECTBLOCKS; j++)
       {
         if (oft[fd].in.blocks[j] == EMPTY)
         {
