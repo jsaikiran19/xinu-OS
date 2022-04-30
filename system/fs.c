@@ -372,14 +372,19 @@ int fs_open(char *filename, int flags)
   }
   int inode_num = -1;
   int src_idx = -1;
-  for (int i = 0; i < n_entries; i++)
+  for (int i = 0; i < DIRECTORY_SIZE; i++)
 
   {
     if (strcmp(fsd.root_dir.entry[i].name, filename) == 0)
     {
-      src_idx = i;
-      if (oft[i].state != FSTATE_OPEN && fsd.root_dir.entry[i].inode_num != EMPTY)
+      
+      if (fsd.root_dir.entry[i].inode_num != EMPTY)
       {
+        if(oft[i].state==FSTATE_OPEN)
+        {
+          return SYSERR;
+        }
+        src_idx = i;
         inode_num = fsd.root_dir.entry[i].inode_num;
         _fs_get_inode_by_num(0, inode_num, &oft[i].in);
         oft[i].state = FSTATE_OPEN; //changing state to open
@@ -387,6 +392,20 @@ int fs_open(char *filename, int flags)
         oft[i].de = &fsd.root_dir.entry[i];
         oft[i].flag = flags;
          _fs_put_inode_by_num(0, oft[i].in.id, &oft[i].in);
+        return i;
+      }
+    }
+  }
+  if(src_idx!=-1) {
+    inode_t new_node;
+    for(int i=0;i<NUM_FD;i++) {
+      if(oft[i].in.id==-1) {
+        _fs_get_inode_by_num(0, inode_num, &new_node);
+        oft[i].in = new_node;
+        oft[i].state = FSTATE_OPEN; 
+        oft[i].fileptr = 0;
+        oft[i].de = &fsd.root_dir.entry[src_idx];
+        oft[i].flag = flags;
         return i;
       }
     }
