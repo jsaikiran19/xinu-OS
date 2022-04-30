@@ -676,10 +676,8 @@ int fs_unlink(char *filename)
 
         fsd.root_dir.entry[i].inode_num = EMPTY;
         node.nlink--;
-        strcpy("", fsd.root_dir.entry[i].name);
-        _fs_put_inode_by_num(0, inode_num, &node);
         
-        fsd.root_dir.numentries--;
+        _fs_put_inode_by_num(0, inode_num, &node);
       }
       else if (node.nlink == 1)
       {
@@ -697,10 +695,12 @@ int fs_unlink(char *filename)
         _fs_put_inode_by_num(0, inode_num, &node);
         --fsd.inodes_used;
       }
+      strcpy(fsd.root_dir.entry[i].name, "");
+        fsd.root_dir.numentries--;
       for(int j=0;j<NUM_FD;j++) {
         if(oft[j].in.id == inode_num)
         {
-          oft[in].in = node;
+          oft[j].in = node;
         }
       }
       return OK;
