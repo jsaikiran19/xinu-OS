@@ -381,7 +381,7 @@ int fs_open(char *filename, int flags)
       if (oft[i].state != FSTATE_OPEN && fsd.root_dir.entry[i].inode_num != EMPTY)
       {
         inode_num = fsd.root_dir.entry[i].inode_num;
-        _fs_get_inode_by_num(0, num, &oft[i].in);
+        _fs_get_inode_by_num(0, inode_num, &oft[i].in);
         oft[i].state = FSTATE_OPEN; //changing state to open
         oft[i].fileptr = 0;
         oft[i].de = &fsd.root_dir.entry[i];
