@@ -543,18 +543,18 @@ int fs_write(int fd, void *buf, int nbytes)
     remaining_count = nbytes;
   }
   
-  while (remaining_count > 0)
-  {
+  // while (remaining_count > 0)
+  // {
     
-    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf, 1);
-    oft[fd].fileptr++;
-    buf++;
-    remaining_count--;
-    block_index = oft[fd].fileptr / fsd.blocksz;
-    offset = oft[fd].fileptr % fsd.blocksz;
-    nbytes--;
-    bytes_written++;
-  }
+  //   bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf, 1);
+  //   oft[fd].fileptr++;
+  //   buf++;
+  //   remaining_count--;
+  //   block_index = oft[fd].fileptr / fsd.blocksz;
+  //   offset = oft[fd].fileptr % fsd.blocksz;
+  //   nbytes--;
+  //   bytes_written++;
+  // }
   int block_found = FALSE;
   while (nbytes > 0)
   {
@@ -589,7 +589,6 @@ int fs_write(int fd, void *buf, int nbytes)
     buf++;
     block_index = oft[fd].fileptr / fsd.blocksz;
     offset = oft[fd].fileptr % fsd.blocksz;
-    remaining_count--;
     nbytes--;
     bytes_written++;
   }
