@@ -386,18 +386,8 @@ int fs_open(char *filename, int flags)
         oft[i].fileptr = 0;
         oft[i].de = &fsd.root_dir.entry[i];
         oft[i].flag = flags;
-        return i;
-      }
-    }
-  }
-  if(src_idx!=1 &&inode_num!=-1){
-    for(int i=0;i<NUM_FD;i++) {
-      if(oft[i].in.id==inode_num){
-        oft[i].state = FSTATE_OPEN; //changing state to open
-        oft[i].fileptr = 0;
-        oft[i].de = &fsd.root_dir.entry[i];
-        oft[i].flag = flags;
          _fs_put_inode_by_num(0, oft[i].in.id, &oft[i].in);
+        return i;
       }
     }
   }
