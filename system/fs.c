@@ -536,9 +536,14 @@ int fs_write(int fd, void *buf, int nbytes)
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
   int ptr = oft[fd].fileptr;
-  int remaining_count = size - offset;
+  int remaining_count = size - oft[fd].fileptr;
+
+  if(remaining_count>nbytes)
+  {
+    remaining_count = nbytes;
+  }
   
-  while (nbytes > 0 && remaining_count > 0)
+  while (remaining_count > 0)
   {
     
     bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf, 1);
