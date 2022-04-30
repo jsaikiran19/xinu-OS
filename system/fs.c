@@ -491,8 +491,8 @@ int fs_read(int fd, void *buf, int nbytes)
   }
 
   int size = oft[fd].in.size;
-  int block_index, offset;
-  int remaining_count;
+  int block_index = oft[fd].fileptr / fsd.blocksz;
+  int offset = oft[fd].fileptr % fsd.blocksz;
   int ptr = oft[fd].fileptr;
   nbytes = (nbytes < size - ptr) ? nbytes : size - ptr;
 
@@ -532,19 +532,21 @@ int fs_write(int fd, void *buf, int nbytes)
   }
   int bytes_written = 0;
   int size = oft[fd].in.size;
-  int block_index, offset;
+  int block_index = oft[fd].fileptr / fsd.blocksz;
+  int offset = oft[fd].fileptr % fsd.blocksz;
   int ptr = oft[fd].fileptr;
   nbytes = (nbytes < size - ptr) ? nbytes : size - ptr;
-  int remaining_count = size - ptr;
-  void *buff_copy = buf;
+  int remaining_count = size - offset;
+  
   while (nbytes > 0 && remaining_count > 0)
   {
+    
+    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf, 1);
+    oft[fd].fileptr++;
+    buf++;
+    remaining_count--;
     block_index = oft[fd].fileptr / fsd.blocksz;
     offset = oft[fd].fileptr % fsd.blocksz;
-    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buff_copy, 1);
-    oft[fd].fileptr++;
-    buff_copy++;
-    remaining_count--;
     nbytes--;
     bytes_written++;
   }
@@ -577,9 +579,9 @@ int fs_write(int fd, void *buf, int nbytes)
       oft[fd].in.size += fsd.blocksz;
       _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
     }
-    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buff_copy, 1);
+    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf, 1);
     oft[fd].fileptr++;
-    buff_copy++;
+    buf++;
     block_index = oft[fd].fileptr / fsd.blocksz;
     offset = oft[fd].fileptr % fsd.blocksz;
     remaining_count--;
