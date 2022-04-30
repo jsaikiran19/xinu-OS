@@ -528,7 +528,7 @@ int fs_read(int fd, void *buf, int nbytes)
 
 static int get_free_block()
 {
-  for (int i = 15; i < fsd.nblocks; i++)
+  for (int i = 18; i < fsd.nblocks; i++)
   {
     if (fs_getmaskbit(i) == 0)
     {
