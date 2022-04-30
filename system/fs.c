@@ -538,23 +538,6 @@ int fs_write(int fd, void *buf, int nbytes)
   int ptr = oft[fd].fileptr;
   int remaining_count = size - oft[fd].fileptr;
 
-  if(remaining_count>nbytes)
-  {
-    remaining_count = nbytes;
-  }
-  
-  // while (remaining_count > 0)
-  // {
-    
-  //   bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf, 1);
-  //   oft[fd].fileptr++;
-  //   buf++;
-  //   remaining_count--;
-  //   block_index = oft[fd].fileptr / fsd.blocksz;
-  //   offset = oft[fd].fileptr % fsd.blocksz;
-  //   nbytes--;
-  //   bytes_written++;
-  // }
   int block_found = FALSE;
   while (nbytes > 0)
   {
@@ -570,8 +553,8 @@ int fs_write(int fd, void *buf, int nbytes)
             return bytes_written;
           }
           oft[fd].in.blocks[j] = new_block_index;
-          block_index = j;
-          offset = 0;
+          // block_index = j;
+          // offset = 0;
           block_found = TRUE;
           break;
         }
@@ -612,7 +595,7 @@ int fs_link(char *src_filename, char *dst_filename)
       strcpy(fsd.root_dir.entry[n_entries].name, dst_filename);
       fsd.root_dir.entry[n_entries].inode_num = inode_num;
       fsd.root_dir.numentries++;
-      int code = _fs_get_inode_by_num(0, inode_num, &node);
+      _fs_get_inode_by_num(0, inode_num, &node);
       node.nlink++;
       _fs_put_inode_by_num(0, inode_num, &node);
       return OK;
