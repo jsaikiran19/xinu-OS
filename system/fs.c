@@ -587,7 +587,6 @@ int fs_link(char *src_filename, char *dst_filename)
 
   inode_t node;
   int n_entries = fsd.root_dir.numentries;
-   = -1;
   for (int i = 0; i < n_entries; i++)
   {
     
