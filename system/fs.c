@@ -526,7 +526,7 @@ static int get_free_block()
 
 int fs_write(int fd, void *buf, int nbytes)
 {
-  if (isbadfid(fd) || oft[fd].flag == O_RDONLY || oft[fd].state == FSTATE_CLOSED)
+  if (isbadfd(fd) || oft[fd].flag == O_RDONLY || oft[fd].state == FSTATE_CLOSED)
   {
     return SYSERR;
   }
@@ -548,17 +548,32 @@ int fs_write(int fd, void *buf, int nbytes)
     nbytes--;
     bytes_written++;
   }
-
-  while (nbytes > 0 && block_index>=INODEDIRECTBLOCKS)
+  int block_found = FALSE;
+  while (nbytes > 0)
   {
     if (oft[fd].in.size <= oft[fd].fileptr)
     {
-      int new_block_index = get_free_block();
-      if (new _block_index == -1)
+      for (int j = 0; j < oft[fd].in.blocks; j++)
+      {
+        if (oft[fd].in.blocks[j] == EMPTY)
+        {
+          int new_block_index = get_free_block();
+          if (new_block_index == -1)
+          {
+            return bytes_written;
+          }
+          oft[fd].in.blocks[j] = new_block_index;
+          block_index = j;
+          offset = 0;
+          block_found = TRUE;
+          break;
+        }
+      }
+      if (!block_found)
       {
         return bytes_written;
       }
-      oft[fd].in.blocks[block_index] = new_block_index;
+
       oft[fd].in.size += fsd.blocksz;
       _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
     }
