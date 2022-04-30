@@ -522,7 +522,7 @@ int fs_read(int fd, void *buf, int nbytes)
   nbytes = (nbytes > (size - oft[fd].fileptr)) ? (size - oft[fd].fileptr) : nbytes;
   while (nbytes > 0)
   {
-    if(oft[fd].fileptr>size)
+    if(oft[fd].fileptr>=size)
     {
       return bytes_read;
     }
