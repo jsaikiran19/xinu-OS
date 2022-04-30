@@ -563,7 +563,7 @@ int fs_write(int fd, void *buf, int nbytes)
       {
         return bytes_written;
       }
-
+      block_found = FALSE;
       oft[fd].in.size += fsd.blocksz;
       _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
     }
