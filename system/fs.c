@@ -526,11 +526,11 @@ int fs_read(int fd, void *buf, int nbytes)
     {
       return bytes_read;
     }
+    block_index = oft[fd].fileptr / fsd.blocksz;
+    offset = oft[fd].fileptr % fsd.blocksz;
     bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, 1);
     oft[fd].fileptr++;
     buf++;
-    block_index = oft[fd].fileptr / fsd.blocksz;
-    offset = oft[fd].fileptr % fsd.blocksz;
     nbytes--;
     bytes_read++;
   }
@@ -593,11 +593,11 @@ int fs_write(int fd, void *buf, int nbytes)
       oft[fd].in.size += fsd.blocksz;
       _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
     }
+    block_index = oft[fd].fileptr / fsd.blocksz;
+    offset = oft[fd].fileptr % fsd.blocksz;
     bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buf_copy, 1);
     oft[fd].fileptr++;
     buf_copy++;
-    block_index = oft[fd].fileptr / fsd.blocksz;
-    offset = oft[fd].fileptr % fsd.blocksz;
     nbytes--;
     bytes_written++;
   }
