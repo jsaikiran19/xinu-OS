@@ -409,7 +409,7 @@ int fs_create(char *filename, int mode)
     return SYSERR;
   }
   int n_entries = fsd.root_dir.numentries;
-  
+
   if (strlen(filename) > FILENAMELEN)
   {
     return SYSERR;
@@ -480,7 +480,35 @@ int fs_seek(int fd, int offset)
 
 int fs_read(int fd, void *buf, int nbytes)
 {
-  return SYSERR;
+  if (isbadfd(fd) || oft[fd].state == FSTATE_CLOSED || oft[fd].flag == O_WRONLY)
+  {
+    return SYSERR;
+  }
+  int bytes_read = 0;
+  if (!buf || nbytes <= 0 || nbytes > oft[fd].in.size)
+  {
+    return SYSERR;
+  }
+
+  int size = oft[fd].in.size;
+  int block_index, offset;
+  int remaining_count;
+  int ptr = oft[fd].fileptr;
+  nbytes = (nbytes < size - ptr) ? nbytes : size - ptr;
+
+  while (nbytes > 0)
+  {
+
+    bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, 1);
+    oft[fd].fileptr++;
+    buf++;
+    block_index = oft[fd].fileptr / fsd.blocksz;
+    offset = oft[fd].fileptr % fsd.blocksz;
+    nbytes--;
+    bytes_read++;
+  }
+
+  return bytes_read;
 }
 
 static int get_free_block()
@@ -498,7 +526,52 @@ static int get_free_block()
 
 int fs_write(int fd, void *buf, int nbytes)
 {
-  return SYSERR;
+  if (isbadfid(fd) || oft[fd].flag == O_RDONLY || oft[fd].state == FSTATE_CLOSED)
+  {
+    return SYSERR;
+  }
+  int bytes_written = 0;
+  int size = oft[fd].in.size;
+  int block_index, offset;
+  int ptr = oft[fd].fileptr;
+  nbytes = (nbytes < size - ptr) ? nbytes : size - ptr;
+  int remaining_count = size - ptr;
+  void *buff_copy = buf;
+  while (nbytes > 0 && remaining_count > 0)
+  {
+    block_index = oft[fd].fileptr / fsd.blocksz;
+    offset = oft[fd].fileptr % fsd.blocksz;
+    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buff_copy, 1);
+    oft[fd].fileptr++;
+    buff_copy++;
+    remaining_count--;
+    nbytes--;
+    bytes_written++;
+  }
+
+  while (nbytes > 0 && block_index>=INODEDIRECTBLOCKS)
+  {
+    if (oft[fd].in.size <= oft[fd].fileptr)
+    {
+      int new_block_index = get_free_block();
+      if (new _block_index == -1)
+      {
+        return bytes_written;
+      }
+      oft[fd].in.blocks[block_index] = new_block_index;
+      oft[fd].in.size += fsd.blocksz;
+      _fs_put_inode_by_num(0, oft[fd].in.id, &oft[fd].in);
+    }
+    bs_bwrite(0, oft[fd].in.blocks[block_index], offset, buff_copy, 1);
+    oft[fd].fileptr++;
+    buff_copy++;
+    block_index = oft[fd].fileptr / fsd.blocksz;
+    offset = oft[fd].fileptr % fsd.blocksz;
+    remaining_count--;
+    nbytes--;
+    bytes_written++;
+  }
+  return bytes_written;
 }
 
 int fs_link(char *src_filename, char *dst_filename)
