@@ -485,7 +485,7 @@ int fs_read(int fd, void *buf, int nbytes)
     return SYSERR;
   }
   int bytes_read = 0;
-  if (!buf || nbytes <= 0)
+  if (!buf || nbytes < 0)
   {
     return SYSERR;
   }
@@ -493,12 +493,13 @@ int fs_read(int fd, void *buf, int nbytes)
   int size = oft[fd].in.size;
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
-  int ptr = oft[fd].fileptr;
-  nbytes = (nbytes < size - ptr) ? nbytes : size - ptr;
-
+  nbytes = (nbytes > (size - oft[fd].fileptr)) ? (size - oft[fd].fileptr) : nbytes;
   while (nbytes > 0)
   {
-
+    if(oft[fd].fileptr>size)
+    {
+      return bytes_read;
+    }
     bs_bread(0, oft[fd].in.blocks[block_index], offset, buf, 1);
     oft[fd].fileptr++;
     buf++;
@@ -535,7 +536,6 @@ int fs_write(int fd, void *buf, int nbytes)
   int block_index = oft[fd].fileptr / fsd.blocksz;
   int offset = oft[fd].fileptr % fsd.blocksz;
   int ptr = oft[fd].fileptr;
-  nbytes = (nbytes < size - ptr) ? nbytes : size - ptr;
   int remaining_count = size - offset;
   
   while (nbytes > 0 && remaining_count > 0)
