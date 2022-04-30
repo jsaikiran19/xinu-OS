@@ -485,7 +485,7 @@ int fs_read(int fd, void *buf, int nbytes)
     return SYSERR;
   }
   int bytes_read = 0;
-  if (!buf || nbytes <= 0 || nbytes > oft[fd].in.size)
+  if (!buf || nbytes <= 0)
   {
     return SYSERR;
   }
