@@ -370,20 +370,34 @@ int fs_open(char *filename, int flags)
   {
     return SYSERR;
   }
+  int inode_num = -1;
+  int src_idx = -1;
   for (int i = 0; i < n_entries; i++)
 
   {
     if (strcmp(fsd.root_dir.entry[i].name, filename) == 0)
     {
+      src_idx = i;
       if (oft[i].state != FSTATE_OPEN && fsd.root_dir.entry[i].inode_num != EMPTY)
       {
-        int num = fsd.root_dir.entry[i].inode_num;
+        inode_num = fsd.root_dir.entry[i].inode_num;
         _fs_get_inode_by_num(0, num, &oft[i].in);
         oft[i].state = FSTATE_OPEN; //changing state to open
         oft[i].fileptr = 0;
         oft[i].de = &fsd.root_dir.entry[i];
         oft[i].flag = flags;
         return i;
+      }
+    }
+  }
+  if(src_idx!=1 &&inode_num!=-1){
+    for(int i=0;i<NUM_FD;i++) {
+      if(oft[i].in.id==inode_num){
+        oft[i].state = FSTATE_OPEN; //changing state to open
+        oft[i].fileptr = 0;
+        oft[i].de = &fsd.root_dir.entry[i];
+        oft[i].flag = flags;
+         _fs_put_inode_by_num(0, oft[i].in.id, &oft[i].in);
       }
     }
   }
@@ -611,11 +625,13 @@ int fs_link(char *src_filename, char *dst_filename)
   {
     return SYSERR;
   }
+  int src_idx = -1;
   for (int i = 0; i < n_entries; i++)
   {
     
     if (strcmp(fsd.root_dir.entry[i].name, src_filename) == 0)
     {
+      src_idx = i;
       int inode_num = fsd.root_dir.entry[i].inode_num;
       if(inode_num == EMPTY)
       {
@@ -628,6 +644,18 @@ int fs_link(char *src_filename, char *dst_filename)
       node.nlink++;
       _fs_put_inode_by_num(0, inode_num, &node);
       break;
+    }
+  }
+  if(src_idx==-1)
+  {
+    return SYSERR;
+  }
+
+  for(int i=0;i<NUM_FD;i++) {
+    if(oft[i].in.id == fsd.root_dir.entry[src_idx].inode_num)
+    {
+      oft[i].in.nlink++;
+      _fs_put_inode_by_num(0, oft[i].in.id, &oft[i].in);
     }
   }
   // for(int i=0;i<n_entries;i++)
@@ -655,7 +683,7 @@ int fs_unlink(char *filename)
       {
 
         fsd.root_dir.entry[i].inode_num = EMPTY;
-        memset(fsd.root_dir.entry[i].name, 0, FILENAMELEN);
+        strcpy("", fsd.root_dir.entry[i].name);
         fsd.root_dir.numentries--;
       }
       else if (node.nlink == 1)
