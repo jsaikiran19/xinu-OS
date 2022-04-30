@@ -587,21 +587,34 @@ int fs_link(char *src_filename, char *dst_filename)
 
   inode_t node;
   int n_entries = fsd.root_dir.numentries;
+  int inode_num = -1;
   for (int i = 0; i < n_entries; i++)
   {
-    int inode_num = fsd.root_dir.entry[i].inode_num;
+    
     if (strcmp(fsd.root_dir.entry[i].name, src_filename) == 0 && inode_num != EMPTY)
     {
+      inode_num = fsd.root_dir.entry[i].inode_num;
       strcpy(fsd.root_dir.entry[n_entries].name, dst_filename);
       fsd.root_dir.entry[n_entries].inode_num = inode_num;
       fsd.root_dir.numentries++;
       _fs_get_inode_by_num(0, inode_num, &node);
       node.nlink++;
       _fs_put_inode_by_num(0, inode_num, &node);
-      return OK;
+      break;
     }
   }
-  return SYSERR;
+  if(inode_num == -1)
+  {
+    return SYSERR;
+  }
+  for(int i=0;i<n_entries;i++)
+  {
+    if(strcmp(fsd.root_dir.entry[i].name,dst_filename)==0 && fsd.root_dir.entry[i].inode_num==inode_num)
+    {
+      return SYSERR;
+    }
+  }
+  return OK;
 }
 
 int fs_unlink(char *filename)
@@ -619,6 +632,7 @@ int fs_unlink(char *filename)
       {
 
         fsd.root_dir.entry[i].inode_num = EMPTY;
+        memset(fsd.root_dir.entry[i].name, 0, FILENAMELEN);
       }
       else if (node.nlink == 1)
       {
