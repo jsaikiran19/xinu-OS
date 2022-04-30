@@ -601,7 +601,7 @@ int fs_link(char *src_filename, char *dst_filename)
   int idx = -1;
   for (int i = 0; i < DIRECTORY_SIZE; i++)
   {
-    if (fsd.root_dir.entry[i].inode_num) == EMPTY)
+    if (fsd.root_dir.entry[i].inode_num == EMPTY)
     {
       idx = i;
       break;
